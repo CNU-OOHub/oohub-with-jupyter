@@ -4,13 +4,13 @@ services:
   oohub:
     build: 
       context: .
-      dockerfile: ./jupyterhub-1/Dockerfile
+      dockerfile: ./jupyterhub/Dockerfile
     expose: 
       - 8000
     ports:
       - "8000:8000"
     volumes:
-      -  ./jupyterhub-1/:/src/jupyterhub/
+      -  ./jupyterhub/:/src/jupyterhub/
     restart: always 
     stdin_open: true
     tty : true 

@@ -45,7 +45,7 @@ RUN python3 -m pip install --upgrade setuptools pip wheel
 # copy everything except whats in .dockerignore, its a
 # compromise between needing to rebuild and maintaining
 # what needs to be part of the build
-COPY ./jupyterhub-1/ /src/jupyterhub/
+COPY ./jupyterhub/ /src/jupyterhub/
 WORKDIR /src/jupyterhub
 
 # Build client component packages (they will be copied into ./share and
@@ -97,7 +97,7 @@ RUN pip install --upgrade pip \
    pip install jupyterlab
 # my config file
 RUN pip install jupyterhub-nativeauthenticator 
-COPY ./jupyterhub-1/jupyterhub_config.py /srv/jupyterhub/
+COPY ./jupyterhub/jupyterhub_config.py /srv/jupyterhub/
 
 RUN apt update 
 RUN apt install sudo 
