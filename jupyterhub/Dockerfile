@@ -95,6 +95,7 @@ WORKDIR /srv/jupyterhub/
 
 RUN pip install --upgrade pip \
    pip install jupyterlab
+   
 # my config file
 RUN pip install jupyterhub-nativeauthenticator 
 COPY ./jupyterhub/jupyterhub_config.py /srv/jupyterhub/

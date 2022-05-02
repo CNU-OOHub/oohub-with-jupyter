@@ -11,11 +11,13 @@ requirements.txt
 setup.py
 ci/docker-db.sh
 ci/init-db.sh
+docs/.DS_Store
 docs/Makefile
 docs/generate-metrics.py
 docs/make.bat
 docs/requirements.txt
 docs/test_docs.py
+docs/source/.DS_Store
 docs/source/changelog.md
 docs/source/conf.py
 docs/source/contributor-list.md
@@ -114,6 +116,7 @@ docs/source/reference/technical-overview.md
 docs/source/reference/templates.md
 docs/source/reference/urls.md
 docs/source/reference/websecurity.md
+jupyterhub/.DS_Store
 jupyterhub/__init__.py
 jupyterhub/__main__.py
 jupyterhub/_data.py
@@ -216,6 +219,8 @@ jupyterhub/tests/test_version.py
 jupyterhub/tests/utils.py
 onbuild/Dockerfile
 onbuild/README.md
+share/.DS_Store
+share/jupyterhub/.DS_Store
 share/jupyterhub/static/favicon.ico
 share/jupyterhub/static/components/bootstrap/CHANGELOG.md
 share/jupyterhub/static/components/bootstrap/Gruntfile.js
@@ -895,6 +900,7 @@ share/jupyterhub/static/css/style.min.css
 share/jupyterhub/static/css/style.min.css.map
 share/jupyterhub/static/images/jupyter.png
 share/jupyterhub/static/images/jupyterhub-80.png
+share/jupyterhub/static/images/jupyterhub-80111.png
 share/jupyterhub/static/js/admin-react.js
 share/jupyterhub/static/js/admin.js
 share/jupyterhub/static/js/home.js
