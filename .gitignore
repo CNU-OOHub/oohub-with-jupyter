@@ -1,2 +1,4 @@
 .DS_Store
 ./jupyterhub/jupyterhub_cookie_secret
+./jupyterhub/jupyterhub.sqlite
+./jupyterhub/jupyterhub-proxy.pid
