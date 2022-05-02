@@ -1,1 +1,2 @@
 .DS_Store
+./jupyterhub/jupyterhub_cookie_secret

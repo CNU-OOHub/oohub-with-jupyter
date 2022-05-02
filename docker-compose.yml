@@ -23,7 +23,7 @@ services:
       -  ./jupyterhub/:/srv/jupyterhub/
       - ./jupyterhub/jupyterhub_config.py:/srv/jupyterhub/jupyterhub_config.py
       - /var/run/docker.sock:/var/run/docker.sock:rw
-      - ../../:/srv/jupyterhub/my-local/
+      - $HOME:/srv/jupyterhub/my-local/
     restart: always 
     stdin_open: true
     tty : true 
