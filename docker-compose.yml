@@ -26,4 +26,17 @@ services:
       - $HOME:/srv/jupyterhub/my-local/
     restart: always 
     stdin_open: true
-    tty : true 
+    tty : true
+    links:
+      - jupyterlab:jupyterlab
+
+  jupyterlab:
+    build: 
+      context: .
+      dockerfile: ./jupyterlab/Dockerfile
+    expose:
+      - 8888
+    ports:
+      - "8888:8888"
+      
+  

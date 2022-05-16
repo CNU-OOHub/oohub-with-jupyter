@@ -93,8 +93,8 @@ RUN python3 -m pip install --no-cache /tmp/wheelhouse/*
 RUN mkdir -p /srv/jupyterhub/
 WORKDIR /srv/jupyterhub/
 
-RUN pip install --upgrade pip \
-   pip install jupyterlab
+RUN pip install --upgrade pip 
+#   pip install jupyterlab
    
 # my config file
 RUN pip install jupyterhub-nativeauthenticator 
