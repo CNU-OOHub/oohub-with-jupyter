@@ -6,8 +6,6 @@
 .jp-DebuggerVariables {
   display: flex;
   flex-direction: column;
-  min-height: 50px;
-  padding-top: 3px;
 }
 
 .jp-DebuggerVariables-body {
@@ -29,7 +27,7 @@
 }
 
 .jp-DebuggerVariables-body ul li {
-  padding: 5px 0 0;
+  padding: 5px 0 0 0;
   cursor: pointer;
   color: var(--jp-content-font-color1);
   display: flex;
@@ -50,7 +48,7 @@
   background: none;
   cursor: pointer;
   display: none;
-  padding: 0 8px;
+  padding: 0px 8px;
 }
 
 .jp-DebuggerVariables-body .jp-DebuggerVariables-renderVariable:active {
@@ -68,6 +66,10 @@
 
 .jp-DebuggerVariables-body ul li > ul {
   margin-left: 12px;
+}
+
+.jp-DebuggerVariables .jp-stack-panel-header .jp-Toolbar {
+  margin-left: auto;
 }
 
 .jp-DebuggerVariables-grid {

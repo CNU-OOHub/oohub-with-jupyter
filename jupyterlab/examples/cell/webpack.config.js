@@ -1,5 +1,4 @@
 const webpack = require('webpack');
-const miniSVGDataURI = require('mini-svg-data-uri');
 
 module.exports = {
   entry: ['whatwg-fetch', './build/index.js'],
@@ -13,16 +12,16 @@ module.exports = {
   module: {
     rules: [
       { test: /\.css$/, use: ['style-loader', 'css-loader'] },
-      { test: /\.html$/, type: 'asset/resource' },
-      { test: /\.md$/, type: 'asset/source' },
-      { test: /\.js.map$/, type: 'asset/resource' },
+      { test: /\.html$/, use: 'file-loader' },
+      { test: /\.md$/, use: 'raw-loader' },
+      { test: /\.js.map$/, use: 'file-loader' },
       {
         // In .css files, svg is loaded as a data URI.
         test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,
         issuer: /\.css$/,
-        type: 'asset',
-        generator: {
-          dataUrl: content => miniSVGDataURI(content.toString())
+        use: {
+          loader: 'svg-url-loader',
+          options: { encoding: 'none', limit: 10000 }
         }
       },
       {
@@ -30,16 +29,20 @@ module.exports = {
         // must be loaded as a raw string instead of data URIs.
         test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,
         issuer: /\.js$/,
-        type: 'asset/source'
+        use: {
+          loader: 'raw-loader'
+        }
       },
       {
         test: /\.(png|jpg|gif|ttf|woff|woff2|eot)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-        type: 'asset'
+        use: [{ loader: 'url-loader', options: { limit: 10000 } }]
       }
     ]
   },
   plugins: [
     new webpack.DefinePlugin({
+      // Needed for Blueprint. See https://github.com/palantir/blueprint/issues/4393
+      'process.env': '{}',
       // Needed for various packages using cwd(), like the path polyfill
       process: { cwd: () => '/' }
     })

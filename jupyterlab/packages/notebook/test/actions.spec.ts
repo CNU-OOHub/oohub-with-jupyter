@@ -1536,7 +1536,6 @@ describe('@jupyterlab/notebook', () => {
         for (let i = 0; i < widget.widgets.length; i++) {
           const cell = widget.widgets[i];
           if (cell instanceof CodeCell) {
-            // eslint-disable-next-line jest/no-conditional-expect
             expect(cell.model.outputs.length).toBe(0);
           }
         }
@@ -1627,7 +1626,7 @@ describe('@jupyterlab/notebook', () => {
 
       it('should be a no-op if the model is `null`', async () => {
         widget.model = null;
-        await expect(NotebookActions.trust(widget)).resolves.not.toThrow();
+        await NotebookActions.trust(widget);
       });
 
       it('should show a dialog if all cells are trusted', async () => {
@@ -1640,7 +1639,7 @@ describe('@jupyterlab/notebook', () => {
         }
         const promise = NotebookActions.trust(widget);
         await acceptDialog();
-        await expect(promise).resolves.not.toThrow();
+        await promise;
       });
     });
   });

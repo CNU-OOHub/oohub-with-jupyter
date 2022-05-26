@@ -6,6 +6,7 @@
 
 import json
 import os
+from os.path import join as pjoin
 
 from jupyter_core.application import JupyterApp, NoStart, base_aliases, base_flags
 from jupyter_server._version import version_info as jpserver_version_info
@@ -18,8 +19,8 @@ from jupyterlab_server import (
     WorkspaceImportApp,
     WorkspaceListApp,
 )
-from notebook_shim.shim import NotebookConfigShimMixin
-from traitlets import Bool, Instance, Int, Unicode, default
+from nbclassic.shim import NBClassicConfigShimMixin
+from traitlets import Bool, Instance, Unicode, default
 
 from ._version import __version__
 from .commands import (
@@ -48,7 +49,7 @@ from .handlers.extension_manager_handler import (
     ExtensionManager,
     extensions_handler_path,
 )
-from .handlers.ydoc_handler import YDocWebSocketHandler
+from .handlers.yjs_echo_ws import YjsEchoWebSocket
 
 DEV_NOTE = """You're running JupyterLab from source.
 If you're working on the TypeScript sources of JupyterLab, try running
@@ -318,7 +319,7 @@ class LabWorkspaceApp(JupyterApp):
     There are three sub-commands for export, import or listing of workspaces. This app
         should not otherwise do any work.
     """
-    subcommands = {}
+    subcommands = dict()
     subcommands["export"] = (
         LabWorkspaceExportApp,
         LabWorkspaceExportApp.description.splitlines()[0],
@@ -395,7 +396,7 @@ aliases.update(
 )
 
 
-class LabApp(NotebookConfigShimMixin, LabServerApp):
+class LabApp(NBClassicConfigShimMixin, LabServerApp):
     version = version
 
     name = "lab"
@@ -463,7 +464,7 @@ class LabApp(NotebookConfigShimMixin, LabServerApp):
     )
     flags["collaborative"] = (
         {"LabApp": {"collaborative": True}},
-        "Whether to enable collaborative mode.",
+        "Whether to enable collaborative mode (experimental).",
     )
 
     subcommands = dict(
@@ -535,23 +536,8 @@ class LabApp(NotebookConfigShimMixin, LabServerApp):
         help="Whether to expose the global app instance to browser via window.jupyterlab",
     )
 
-    collaborative = Bool(False, config=True, help="Whether to enable collaborative mode.")
-
-    collaborative_file_poll_interval = Int(
-        1,
-        config=True,
-        help="""The period in seconds to check for file changes in the back-end (relevant only when
-        in collaborative mode). Defaults to 1s, if 0 then file changes will only be checked when
-        saving changes from the front-end.""",
-    )
-
-    collaborative_document_cleanup_delay = Int(
-        60,
-        allow_none=True,
-        config=True,
-        help="""The delay in seconds to keep a document in memory in the back-end after all clients
-        disconnect (relevant only when in collaborative mode). Defaults to 60s, if None then the
-        document will be kept in memory forever.""",
+    collaborative = Bool(
+        False, config=True, help="Whether to enable collaborative mode (experimental)."
     )
 
     @default("app_dir")
@@ -618,11 +604,11 @@ class LabApp(NotebookConfigShimMixin, LabServerApp):
             self.log.info("Running JupyterLab in dev mode")
 
         if self.watch and self.core_mode:
-            self.log.warning("Cannot watch in core mode, did you mean --dev-mode?")
+            self.log.warn("Cannot watch in core mode, did you mean --dev-mode?")
             self.watch = False
 
         if self.core_mode and self.dev_mode:
-            self.log.warning("Conflicting modes, choosing dev_mode over core_mode")
+            self.log.warn("Conflicting modes, choosing dev_mode over core_mode")
             self.core_mode = False
 
         # Set the paths based on JupyterLab's mode.
@@ -642,6 +628,9 @@ class LabApp(NotebookConfigShimMixin, LabServerApp):
         else:
             self.static_paths = [self.static_dir]
             self.template_paths = [self.templates_dir]
+
+    def initialize_settings(self):
+        super().initialize_settings()
 
     def initialize_handlers(self):
 
@@ -675,7 +664,7 @@ class LabApp(NotebookConfigShimMixin, LabServerApp):
         handlers.append(build_handler)
 
         # Yjs Echo WebSocket handler
-        yjs_echo_handler = (r"/api/yjs/(.*)", YDocWebSocketHandler)
+        yjs_echo_handler = (r"/api/yjs/(.*)", YjsEchoWebSocket)
         handlers.append(yjs_echo_handler)
 
         errored = False
@@ -727,12 +716,6 @@ class LabApp(NotebookConfigShimMixin, LabServerApp):
 
         # Update Jupyter Server's webapp settings with jupyterlab settings.
         self.serverapp.web_app.settings["page_config_data"] = page_config
-        self.serverapp.web_app.settings[
-            "collaborative_file_poll_interval"
-        ] = self.collaborative_file_poll_interval
-        self.serverapp.web_app.settings[
-            "collaborative_document_cleanup_delay"
-        ] = self.collaborative_document_cleanup_delay
 
         # Extend Server handlers with jupyterlab handlers.
         self.handlers.extend(handlers)

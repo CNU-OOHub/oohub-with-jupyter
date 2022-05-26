@@ -6,8 +6,6 @@
 .jp-DebuggerCallstack {
   display: flex;
   flex-direction: column;
-  min-height: 50px;
-  padding-top: 3px;
 }
 
 .jp-DebuggerCallstack-body {

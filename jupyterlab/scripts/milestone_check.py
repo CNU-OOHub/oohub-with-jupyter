@@ -206,7 +206,7 @@ print()
 if len(prs_not_represented) > 0:
     print(
         """
-PRs that are in the milestone, but have no commits in the version range.
+PRs that are in the milestone, but have no commits in the version range. 
 These PRs probably belong in a different milestone.
 """
     )

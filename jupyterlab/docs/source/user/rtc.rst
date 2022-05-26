@@ -3,6 +3,11 @@
 Real Time Collaboration
 =======================
 
+.. warning::
+    
+    Real Time Collaboration is an experimental feature. Please back up any 
+    files that you edit with it.
+
 From JupyterLab 3.1, file documents and notebooks have collaborative
 editing using the `Yjs shared editing framework <https://github.com/yjs/yjs>`_.
 Editors are not collaborative by default; to activate it, start JupyterLab
@@ -22,7 +27,7 @@ Moreover, you can see the cursors from other users with an anonymous
 username, a username that will disappear in a few seconds to make room
 for what is essential, the document's content.
 
-.. image:: images/rtc_shared_cursors.png
+.. image:: images/shared_cursors.png
    :align: center
    :class: jp-screenshot
 
@@ -36,8 +41,8 @@ represent the document's content, what we call ``DocumentModel``. If you
 modify a Notebook with both editors simultaneously, JupyterLab will prompt
 a warning message indicating that the document's content changed. For more
 information, you can read the section of
-`Documents <https://jupyterlab.readthedocs.io/en/latest/extension/documents.html#documents>`_.
+`Documents <https://jupyterlab.readthedocs.io/en/3.4.x/extension/documents.html#documents>`_.
 
-.. image:: images/rtc_sync_editors.png
+.. image:: images/sync_editors.png
    :align: center
    :class: jp-screenshot

@@ -22,6 +22,21 @@
     },
     {
       "path": "../../testutils"
+    },
+    {
+      "path": "../coreutils"
+    },
+    {
+      "path": "../nbformat"
+    },
+    {
+      "path": "../observables"
+    },
+    {
+      "path": "../settingregistry"
+    },
+    {
+      "path": "../statedb"
     }
   ]
 }

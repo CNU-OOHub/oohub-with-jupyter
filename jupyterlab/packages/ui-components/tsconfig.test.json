@@ -6,9 +6,6 @@
       "path": "../coreutils"
     },
     {
-      "path": "../rendermime-interfaces"
-    },
-    {
       "path": "../translation"
     },
     {
@@ -16,6 +13,12 @@
     },
     {
       "path": "../../testutils"
+    },
+    {
+      "path": "../coreutils"
+    },
+    {
+      "path": "../translation"
     }
   ]
 }

@@ -357,7 +357,7 @@ namespace Private {
   ): void {
     const node = breadcrumbs[0].parentNode as HTMLElement;
 
-    // Remove all but the home or preferred node.
+    // Remove all but the root or preferred node.
     const firstChild = node.firstChild as HTMLElement;
     while (firstChild && firstChild.nextSibling) {
       node.removeChild(firstChild.nextSibling);

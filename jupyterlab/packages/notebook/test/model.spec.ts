@@ -139,9 +139,7 @@ describe('@jupyterlab/notebook', () => {
           const model = new NotebookModel();
           const cell = model.contentFactory.createCodeCell({});
           model.cells.push(cell);
-          expect(() => {
-            cell.value.text = 'foo';
-          }).not.toThrow();
+          cell.value.text = 'foo';
         });
 
         it('should emit the `contentChanged` signal', () => {

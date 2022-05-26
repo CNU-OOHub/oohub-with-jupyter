@@ -53,7 +53,7 @@ export class DebuggerModel implements IDebugger.Model.IService {
   readonly sources: SourcesModel;
 
   /**
-   * The sources model.
+   * The kernel sources model.
    */
   readonly kernelSources: KernelSourcesModel;
 

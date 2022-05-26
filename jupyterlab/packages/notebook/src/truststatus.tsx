@@ -1,11 +1,7 @@
+import { VDomModel, VDomRenderer } from '@jupyterlab/apputils';
 import { Cell } from '@jupyterlab/cells';
 import { ITranslator, nullTranslator } from '@jupyterlab/translation';
-import {
-  notTrustedIcon,
-  trustedIcon,
-  VDomModel,
-  VDomRenderer
-} from '@jupyterlab/ui-components';
+import { notTrustedIcon, trustedIcon } from '@jupyterlab/ui-components';
 import { toArray } from '@lumino/algorithm';
 import React from 'react';
 import { INotebookModel, Notebook } from '.';
@@ -100,7 +96,9 @@ namespace NotebookTrustComponent {
 /**
  * The NotebookTrust status item.
  */
-export class NotebookTrustStatus extends VDomRenderer<NotebookTrustStatus.Model> {
+export class NotebookTrustStatus extends VDomRenderer<
+  NotebookTrustStatus.Model
+> {
   /**
    * Construct a new status item.
    */
@@ -112,7 +110,7 @@ export class NotebookTrustStatus extends VDomRenderer<NotebookTrustStatus.Model>
   /**
    * Render the NotebookTrust status item.
    */
-  render(): JSX.Element | null {
+  render() {
     if (!this.model) {
       return null;
     }
@@ -150,21 +148,21 @@ export namespace NotebookTrustStatus {
     /**
      * The total number of cells in the current notebook.
      */
-    get totalCells(): number {
+    get totalCells() {
       return this._totalCells;
     }
 
     /**
      * Whether the active cell is trusted.
      */
-    get activeCellTrusted(): boolean {
+    get activeCellTrusted() {
       return this._activeCellTrusted;
     }
 
     /**
      * The current notebook for the model.
      */
-    get notebook(): Notebook | null {
+    get notebook() {
       return this._notebook;
     }
     set notebook(model: Notebook | null) {
@@ -238,10 +236,9 @@ export namespace NotebookTrustStatus {
     /**
      * Given a notebook model, figure out how many of the cells are trusted.
      */
-    private _deriveCellTrustState(model: INotebookModel | null): {
-      total: number;
-      trusted: number;
-    } {
+    private _deriveCellTrustState(
+      model: INotebookModel | null
+    ): { total: number; trusted: number } {
       if (model === null) {
         return { total: 0, trusted: 0 };
       }

@@ -348,7 +348,7 @@ namespace Private {
   /**
    * The default strict equality item comparator.
    */
-  export function itemCmp<T>(first: T, second: T): boolean {
+  export function itemCmp(first: any, second: any): boolean {
     return first === second;
   }
 }

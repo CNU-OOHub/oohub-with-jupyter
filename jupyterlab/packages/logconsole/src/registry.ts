@@ -76,14 +76,14 @@ export class LoggerRegistry implements ILoggerRegistry {
   /**
    * Whether the register is disposed.
    */
-  get isDisposed(): boolean {
+  get isDisposed() {
     return this._isDisposed;
   }
 
   /**
    * Dispose the registry and all loggers.
    */
-  dispose(): void {
+  dispose() {
     if (this.isDisposed) {
       return;
     }

@@ -40,7 +40,14 @@ import { DebuggerModel } from '../src/model';
 
 import { SourcesBody } from '../src/panels/sources/body';
 
+import { SourcesHeader } from '../src/panels/sources/header';
+
 import { IDebugger } from '../src/tokens';
+
+/**
+ * A test sidebar.
+ */
+class TestSidebar extends Debugger.Sidebar {}
 
 const server = new JupyterServer();
 
@@ -74,7 +81,7 @@ describe('Debugger', () => {
   let session: Debugger.Session;
   let path: string;
   let connection: Session.ISessionConnection;
-  let sidebar: Debugger.Sidebar;
+  let sidebar: TestSidebar;
 
   beforeAll(async () => {
     connection = await createSession({
@@ -87,7 +94,7 @@ describe('Debugger', () => {
     session = new Debugger.Session({ connection });
     service.session = session;
 
-    sidebar = new Debugger.Sidebar({
+    sidebar = new TestSidebar({
       service,
       callstackCommands: {
         registry,
@@ -153,33 +160,14 @@ describe('Debugger', () => {
   });
 
   describe('Panel', () => {
-    let toolbarList: any;
-    beforeEach(() => {
-      toolbarList = sidebar.content.node.querySelectorAll(
-        '.jp-AccordionPanel-title'
-      );
-    });
-    it('should have 5 child widgets', () => {
-      expect(sidebar.widgets.length).toBe(5);
-    });
-
-    it('should have 5 toolbars', () => {
-      expect(toolbarList.length).toBe(5);
-    });
     describe('Variable toolbar', () => {
       let toolbar: Element;
       beforeEach(() => {
-        toolbar = toolbarList.item(0);
-      });
-      it('should have expanding icon', () => {
-        const title = toolbar.querySelectorAll(
-          '.lm-AccordionPanel-titleCollapser'
-        );
-        expect(title[0].innerHTML).toContain('ui-components:caret-down');
+        toolbar = sidebar.variables.node;
       });
       it('should have title', () => {
         const title = toolbar.querySelectorAll(
-          'span.lm-AccordionPanel-titleLabel'
+          'div.jp-stack-panel-header > h2'
         );
         expect(title.length).toBe(1);
         expect(title[0].innerHTML).toContain('Variables');
@@ -194,18 +182,13 @@ describe('Debugger', () => {
     describe('Callstack toolbar', () => {
       let toolbar: Element;
       beforeEach(() => {
-        toolbar = toolbarList.item(1);
-      });
-      it('should have expanding icon', () => {
-        const title = toolbar.querySelectorAll(
-          '.lm-AccordionPanel-titleCollapser'
-        );
-        expect(title[0].innerHTML).toContain('ui-components:caret-down');
+        toolbar = sidebar.callstack.node;
       });
       it('should have title', () => {
         const title = toolbar.querySelectorAll(
-          'span.lm-AccordionPanel-titleLabel'
+          'div.jp-stack-panel-header > h2'
         );
+        console;
         expect(title.length).toBe(1);
         expect(title[0].innerHTML).toContain('Callstack');
       });
@@ -217,17 +200,11 @@ describe('Debugger', () => {
     describe('Breakpoints toolbar', () => {
       let toolbar: Element;
       beforeEach(() => {
-        toolbar = toolbarList.item(2);
-      });
-      it('should have expanding icon', () => {
-        const title = toolbar.querySelectorAll(
-          '.lm-AccordionPanel-titleCollapser'
-        );
-        expect(title[0].innerHTML).toContain('ui-components:caret-down');
+        toolbar = sidebar.breakpoints.node;
       });
       it('should have title', () => {
         const title = toolbar.querySelectorAll(
-          'span.lm-AccordionPanel-titleLabel'
+          'div.jp-stack-panel-header > h2'
         );
         expect(title.length).toBe(1);
         expect(title[0].innerHTML).toContain('Breakpoints');
@@ -240,17 +217,11 @@ describe('Debugger', () => {
     describe('Source toolbar', () => {
       let toolbar: Element;
       beforeEach(() => {
-        toolbar = toolbarList.item(3);
-      });
-      it('should have expanding icon', () => {
-        const title = toolbar.querySelectorAll(
-          '.lm-AccordionPanel-titleCollapser'
-        );
-        expect(title[0].innerHTML).toContain('ui-components:caret-down');
+        toolbar = sidebar.sources.node;
       });
       it('should have title', () => {
         const title = toolbar.querySelectorAll(
-          'span.lm-AccordionPanel-titleLabel'
+          'div.jp-stack-panel-header > h2'
         );
         expect(title.length).toBe(1);
         expect(title[0].innerHTML).toContain('Source');
@@ -264,12 +235,24 @@ describe('Debugger', () => {
   });
 
   describe('#callstack', () => {
-    it('should have a body', () => {
-      expect(sidebar.callstack.widgets.length).toEqual(1);
+    it('should have a header and a body', () => {
+      expect(sidebar.callstack.widgets.length).toEqual(2);
     });
 
     it('should have the jp-DebuggerCallstack class', () => {
       expect(sidebar.callstack.hasClass('jp-DebuggerCallstack')).toBe(true);
+    });
+
+    it('should have the debug buttons', () => {
+      const node = sidebar.callstack.node;
+      const items = node.querySelectorAll('button');
+
+      expect(items.length).toEqual(6);
+      items.forEach(item => {
+        expect(Array.from(items[0].classList)).toEqual(
+          expect.arrayContaining(['jp-ToolbarButtonComponent'])
+        );
+      });
     });
 
     it('should display the stack frames', () => {
@@ -352,18 +335,19 @@ describe('Debugger', () => {
   });
 
   describe('#sources', () => {
-    it('should have a body', () => {
-      expect(sidebar.sources.widgets.length).toEqual(1);
+    it('should have a header and a body', () => {
+      expect(sidebar.sources.widgets.length).toEqual(2);
     });
 
     it('should display the source path in the header', () => {
-      const header = sidebar.sources.toolbar;
-      const pathWidget = header.node.innerHTML;
-      expect(pathWidget).toContain(path);
+      const body = sidebar.sources.widgets[0] as SourcesHeader;
+      const children = toArray(body.children());
+      const sourcePath = children[2].node.querySelector('span');
+      expect(sourcePath!.innerHTML).toEqual(path);
     });
 
     it('should display the source code in the body', () => {
-      const body = sidebar.sources.widgets[0] as SourcesBody;
+      const body = sidebar.sources.widgets[1] as SourcesBody;
       const children = toArray(body.children());
       const editor = children[0] as CodeEditorWrapper;
       expect(editor.model.value.text).toEqual(code);

@@ -1,7 +1,11 @@
 // Copyright (c) Jupyter Development Team.
 // Distributed under the terms of the Modified BSD License.
 
-import { ISessionContext, ToolbarRegistry } from '@jupyterlab/apputils';
+import {
+  ISessionContext,
+  Toolbar,
+  ToolbarRegistry
+} from '@jupyterlab/apputils';
 import { CodeEditor } from '@jupyterlab/codeeditor';
 import {
   IChangedArgs as IChangedArgsGeneric,
@@ -25,7 +29,6 @@ import {
   pythonIcon,
   rKernelIcon,
   spreadsheetIcon,
-  Toolbar,
   yamlIcon
 } from '@jupyterlab/ui-components';
 import {
@@ -315,8 +318,9 @@ export class DocumentRegistry implements IDisposable {
           }
         });
       if (!this._defaultWidgetFactories[fileTypeName]) {
-        this._defaultWidgetFactories[fileTypeName] =
-          this._widgetFactoriesForFileType[fileTypeName][0];
+        this._defaultWidgetFactories[
+          fileTypeName
+        ] = this._widgetFactoriesForFileType[fileTypeName][0];
       }
     }
 
@@ -445,33 +449,22 @@ export class DocumentRegistry implements IDisposable {
    * file types and there is a match in that set, this returns that.
    * Otherwise, this returns the same widget factory as
    * [[defaultWidgetFactory]].
-   *
-   * The user setting `defaultViewers` took precedence on this one too.
    */
   defaultRenderedWidgetFactory(path: string): DocumentRegistry.WidgetFactory {
     // Get the matching file types.
-    const ftNames = this.getFileTypesForPath(PathExt.basename(path)).map(
-      ft => ft.name
-    );
+    const fts = this.getFileTypesForPath(PathExt.basename(path));
 
-    // Start with any user overrides for the defaults.
-    for (const name in ftNames) {
-      if (name in this._defaultWidgetFactoryOverrides) {
-        return this._widgetFactories[this._defaultWidgetFactoryOverrides[name]];
-      }
-    }
-
+    let factory: DocumentRegistry.WidgetFactory | undefined = undefined;
     // Find if a there is a default rendered factory for this type.
-    for (const name in ftNames) {
-      if (name in this._defaultRenderedWidgetFactories) {
-        return this._widgetFactories[
-          this._defaultRenderedWidgetFactories[name]
+    for (const ft of fts) {
+      if (ft.name in this._defaultRenderedWidgetFactories) {
+        factory = this._widgetFactories[
+          this._defaultRenderedWidgetFactories[ft.name]
         ];
+        break;
       }
     }
-
-    // Fallback to the default widget factory
-    return this.defaultWidgetFactory(path);
+    return factory || this.defaultWidgetFactory(path);
   }
 
   /**
@@ -738,8 +731,9 @@ export class DocumentRegistry implements IDisposable {
   private _defaultWidgetFactoryOverrides: {
     [key: string]: string;
   } = Object.create(null);
-  private _defaultWidgetFactories: { [key: string]: string } =
-    Object.create(null);
+  private _defaultWidgetFactories: { [key: string]: string } = Object.create(
+    null
+  );
   private _defaultRenderedWidgetFactories: {
     [key: string]: string;
   } = Object.create(null);
@@ -1050,15 +1044,38 @@ export namespace DocumentRegistry {
   /**
    * The options used to initialize a widget factory.
    */
-  export interface IWidgetFactoryOptions<T extends Widget = Widget>
-    extends Omit<
-      IRenderMime.IDocumentWidgetFactoryOptions,
-      'primaryFileType' | 'toolbarFactory'
-    > {
+  export interface IWidgetFactoryOptions<T extends Widget = Widget> {
+    /**
+     * The name of the widget to display in dialogs.
+     */
+    readonly name: string;
+
+    /**
+     * The file types the widget can view.
+     */
+    readonly fileTypes: ReadonlyArray<string>;
+
+    /**
+     * The file types for which the factory should be the default.
+     */
+    readonly defaultFor?: ReadonlyArray<string>;
+
+    /**
+     * The file types for which the factory should be the default for rendering,
+     * if that is different than the default factory (which may be for editing).
+     * If undefined, then it will fall back on the default file type.
+     */
+    readonly defaultRendered?: ReadonlyArray<string>;
+
     /**
      * Whether the widget factory is read only.
      */
     readonly readOnly?: boolean;
+
+    /**
+     * The registered name of the model type used to create the widgets.
+     */
+    readonly modelName?: string;
 
     /**
      * Whether the widgets prefer having a kernel started.
@@ -1074,6 +1091,11 @@ export namespace DocumentRegistry {
      * Whether the kernel should be shutdown when the widget is closed.
      */
     readonly shutdownOnClose?: boolean;
+
+    /**
+     * The application language translator.
+     */
+    readonly translator?: ITranslator;
 
     /**
      * A function producing toolbar widgets, overriding the default toolbar widgets.
@@ -1116,15 +1138,6 @@ export namespace DocumentRegistry {
      * This field may be used or ignored depending on shell implementation.
      */
     rank?: number;
-
-    /**
-     * Type of widget to open
-     *
-     * #### Notes
-     * This is the key used to load user customization.
-     * Its typical value is: a factory name or the widget id (if singleton)
-     */
-    type?: string;
   }
 
   /**
@@ -1222,11 +1235,47 @@ export namespace DocumentRegistry {
   /**
    * An interface for a file type.
    */
-  export interface IFileType extends IRenderMime.IFileType {
+  export interface IFileType {
+    /**
+     * The name of the file type.
+     */
+    readonly name: string;
+
+    /**
+     * The mime types associated the file type.
+     */
+    readonly mimeTypes: ReadonlyArray<string>;
+
+    /**
+     * The extensions of the file type (e.g. `".txt"`).  Can be a compound
+     * extension (e.g. `".table.json`).
+     */
+    readonly extensions: ReadonlyArray<string>;
+
+    /**
+     * An optional display name for the file type.
+     */
+    readonly displayName?: string;
+
+    /**
+     * An optional pattern for a file name (e.g. `^Dockerfile$`).
+     */
+    readonly pattern?: string;
+
     /**
      * The icon for the file type.
      */
     readonly icon?: LabIcon;
+
+    /**
+     * The icon class name for the file type.
+     */
+    readonly iconClass?: string;
+
+    /**
+     * The icon label for the file type.
+     */
+    readonly iconLabel?: string;
 
     /**
      * The content type of the new file.
@@ -1527,7 +1576,7 @@ namespace Private {
   /**
    * Get the extension name of a path.
    *
-   * @param path - string.
+   * @param file - string.
    *
    * #### Notes
    * Dotted filenames (e.g. `".table.json"` are allowed).

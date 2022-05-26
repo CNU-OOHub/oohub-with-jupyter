@@ -2,6 +2,7 @@
 // Distributed under the terms of the Modified BSD License.
 
 import { JupyterFrontEnd } from '@jupyterlab/application';
+import { VDomModel } from '@jupyterlab/apputils';
 import {
   KernelSpec,
   ServerConnection,
@@ -9,7 +10,6 @@ import {
 } from '@jupyterlab/services';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { ITranslator, nullTranslator } from '@jupyterlab/translation';
-import { VDomModel } from '@jupyterlab/ui-components';
 import { Debouncer } from '@lumino/polling';
 import * as semver from 'semver';
 import { doBuild } from './build-helper';
@@ -209,7 +209,7 @@ export type Action = 'install' | 'uninstall' | 'enable' | 'disable';
 export class ListModel extends VDomModel {
   constructor(
     app: JupyterFrontEnd,
-    serviceManager: ServiceManager.IManager,
+    serviceManager: ServiceManager,
     settings: ISettingRegistry.ISettings,
     translator?: ITranslator
   ) {
@@ -744,7 +744,7 @@ export class ListModel extends VDomModel {
    *
    * Emits the `stateChanged` signal on successful completion.
    */
-  protected async update(refreshInstalled = false): Promise<void> {
+  protected async update(refreshInstalled = false) {
     if (ListModel.isDisclaimed()) {
       const [searchMap, installedMap] = await Promise.all([
         this.performSearch(),
@@ -887,7 +887,7 @@ export class ListModel extends VDomModel {
   /**
    * The service manager to use for building.
    */
-  protected serviceManager: ServiceManager.IManager;
+  protected serviceManager: ServiceManager;
 
   protected translator: ITranslator;
   private _app: JupyterFrontEnd;
@@ -926,11 +926,11 @@ export namespace ListModel {
     return semver.lt(entry.installed_version, entry.latest_version);
   }
 
-  export function isDisclaimed(): boolean {
+  export function isDisclaimed() {
     return _isDisclaimed;
   }
 
-  export function toogleDisclaimed(): void {
+  export function toogleDisclaimed() {
     _isDisclaimed = !_isDisclaimed;
   }
 }

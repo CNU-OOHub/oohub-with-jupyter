@@ -15,9 +15,6 @@
       "path": "../shared-models"
     },
     {
-      "path": "../statusbar"
-    },
-    {
       "path": "../translation"
     },
     {
@@ -28,6 +25,24 @@
     },
     {
       "path": "../../testutils"
+    },
+    {
+      "path": "../coreutils"
+    },
+    {
+      "path": "../nbformat"
+    },
+    {
+      "path": "../observables"
+    },
+    {
+      "path": "../shared-models"
+    },
+    {
+      "path": "../translation"
+    },
+    {
+      "path": "../ui-components"
     }
   ]
 }

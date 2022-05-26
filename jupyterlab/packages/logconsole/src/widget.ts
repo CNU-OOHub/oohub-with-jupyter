@@ -159,7 +159,7 @@ export class ScrollingWidget<T extends Widget> extends Widget {
     return this._content;
   }
 
-  protected onAfterAttach(msg: Message): void {
+  protected onAfterAttach(msg: Message) {
     super.onAfterAttach(msg);
     // defer so content gets a chance to attach first
     requestAnimationFrame(() => {
@@ -179,13 +179,13 @@ export class ScrollingWidget<T extends Widget> extends Widget {
     }
   }
 
-  protected onBeforeDetach(msg: Message): void {
+  protected onBeforeDetach(msg: Message) {
     if (this._observer) {
       this._observer.disconnect();
     }
   }
 
-  protected onAfterShow(msg: Message): void {
+  protected onAfterShow(msg: Message) {
     if (this._tracking) {
       this._sentinel.scrollIntoView();
     }
@@ -321,7 +321,7 @@ export class LogConsolePanel extends StackedPanel {
     this._handlePlaceholder();
   }
 
-  protected onAfterShow(msg: Message): void {
+  protected onAfterShow(msg: Message) {
     super.onAfterShow(msg);
     if (this.source !== null) {
       this._sourceDisplayed.emit({

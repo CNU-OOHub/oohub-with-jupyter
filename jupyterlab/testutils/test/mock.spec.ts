@@ -98,9 +98,7 @@ describe('mock', () => {
     describe('.dispose()', () => {
       it('should be a no-op', () => {
         const kernel = new Mock.KernelMock({});
-        expect(() => {
-          kernel.dispose();
-        }).not.toThrow();
+        kernel.dispose();
       });
     });
 
@@ -124,7 +122,7 @@ describe('mock', () => {
     describe('.shutdown()', () => {
       it('should be a no-op', async () => {
         const kernel = new Mock.KernelMock({});
-        await expect(kernel.shutdown()).resolves.not.toThrow();
+        await kernel.shutdown();
       });
     });
 
@@ -139,7 +137,7 @@ describe('mock', () => {
     describe('.restart()', () => {
       it('should be a no-op', async () => {
         const kernel = new Mock.KernelMock({});
-        await expect(kernel.restart()).resolves.not.toThrow();
+        await kernel.restart();
       });
     });
 
@@ -180,9 +178,7 @@ describe('mock', () => {
     describe('.dispose()', () => {
       it('should be a no-op', () => {
         const session = new Mock.SessionConnectionMock({}, null);
-        expect(() => {
-          session.dispose();
-        }).not.toThrow();
+        session.dispose();
       });
     });
 
@@ -198,7 +194,7 @@ describe('mock', () => {
     describe('.shutdown()', () => {
       it('should be a no-op', async () => {
         const session = new Mock.SessionConnectionMock({}, null);
-        await expect(session.shutdown()).resolves.not.toThrow();
+        await session.shutdown();
       });
     });
 
@@ -266,23 +262,21 @@ describe('mock', () => {
     describe('.dispose()', () => {
       it('should be a no-op', () => {
         const context = new Mock.SessionContextMock({}, null);
-        expect(() => {
-          context.dispose();
-        }).not.toThrow();
+        context.dispose();
       });
     });
 
     describe('.initialize()', () => {
       it('should be a no-op', async () => {
         const context = new Mock.SessionContextMock({}, null);
-        await expect(context.initialize()).resolves.not.toThrow();
+        await context.initialize();
       });
     });
 
     describe('.ready', () => {
       it('should be a no-op', async () => {
         const context = new Mock.SessionContextMock({}, null);
-        await expect(context.ready).resolves.not.toThrow();
+        await context.ready;
       });
     });
 
@@ -298,7 +292,7 @@ describe('mock', () => {
     describe('.shutdown()', () => {
       it('should be a no-op', async () => {
         const context = new Mock.SessionContextMock({}, null);
-        await expect(context.shutdown()).resolves.not.toThrow();
+        await context.shutdown();
       });
     });
   });
@@ -469,9 +463,7 @@ describe('mock', () => {
     describe('.dispose()', () => {
       it('should be a no-op', () => {
         const manager = new Mock.ContentsManagerMock();
-        expect(() => {
-          manager.dispose();
-        }).not.toThrow();
+        manager.dispose();
       });
     });
   });
@@ -531,7 +523,7 @@ describe('mock', () => {
     describe('.refreshRunning()', () => {
       it('should be a no-op', async () => {
         const manager = new Mock.SessionManagerMock();
-        await expect(manager.refreshRunning()).resolves.not.toThrow();
+        await manager.refreshRunning();
       });
     });
 
@@ -567,7 +559,7 @@ describe('mock', () => {
     describe('.refreshSpecs()', () => {
       it('should be a no-op', async () => {
         const manager = new Mock.KernelSpecManagerMock();
-        await expect(manager.refreshSpecs()).resolves.not.toThrow();
+        await manager.refreshSpecs();
       });
     });
   });
@@ -583,7 +575,7 @@ describe('mock', () => {
     describe('.ready', () => {
       it('should resolve', async () => {
         const manager = new Mock.ServiceManagerMock();
-        await expect(manager.ready).resolves.not.toThrow();
+        await manager.ready;
       });
     });
 
@@ -611,9 +603,7 @@ describe('mock', () => {
     describe('.dispose()', () => {
       it('should be a no-op', () => {
         const manager = new Mock.ServiceManagerMock();
-        expect(() => {
-          manager.dispose();
-        }).not.toThrow();
+        manager.dispose();
       });
     });
   });

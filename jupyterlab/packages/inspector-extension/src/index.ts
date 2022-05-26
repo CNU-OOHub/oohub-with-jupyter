@@ -33,8 +33,6 @@ import { inspectorIcon } from '@jupyterlab/ui-components';
  */
 namespace CommandIDs {
   export const open = 'inspector:open';
-  export const close = 'inspector:close';
-  export const toggle = 'inspector:toggle';
 }
 
 /**
@@ -55,12 +53,9 @@ const inspector: JupyterFrontEndPlugin<IInspector> = {
   ): IInspector => {
     const trans = translator.load('jupyterlab');
     const { commands, shell } = app;
-    const caption = trans.__(
-      'Live updating code documentation from the active kernel'
-    );
-    const openedLabel = trans.__('Contextual Help');
+    const command = CommandIDs.open;
+    const label = trans.__('Show Contextual Help');
     const namespace = 'inspector';
-    const datasetKey = 'jpInspector';
     const tracker = new WidgetTracker<MainAreaWidget<InspectorPanel>>({
       namespace
     });
@@ -77,7 +72,7 @@ const inspector: JupyterFrontEndPlugin<IInspector> = {
           content: new InspectorPanel({ translator })
         });
         inspector.id = 'jp-inspector';
-        inspector.title.label = openedLabel;
+        inspector.title.label = label;
         inspector.title.icon = inspectorIcon;
         void tracker.add(inspector);
         source = source && !source.isDisposed ? source : null;
@@ -85,31 +80,23 @@ const inspector: JupyterFrontEndPlugin<IInspector> = {
         inspector.content.source?.onEditorChange(args);
       }
       if (!inspector.isAttached) {
-        shell.add(inspector, 'main', {
-          activate: false,
-          mode: 'split-right',
-          type: 'Inspector'
-        });
+        shell.add(inspector, 'main', { activate: false, mode: 'split-right' });
       }
       shell.activateById(inspector.id);
-      document.body.dataset[datasetKey] = 'open';
       return inspector;
     }
-    function closeInspector(): void {
-      inspector.dispose();
-      delete document.body.dataset[datasetKey];
-    }
 
-    // Add inspector:open command to registry.
-    const showLabel = trans.__('Show Contextual Help');
-    commands.addCommand(CommandIDs.open, {
-      caption,
+    // Add command to registry.
+    commands.addCommand(command, {
+      caption: trans.__(
+        'Live updating code documentation from the active kernel'
+      ),
       isEnabled: () =>
         !inspector ||
         inspector.isDisposed ||
         !inspector.isAttached ||
         !inspector.isVisible,
-      label: showLabel,
+      label,
       icon: args => (args.isLauncher ? inspectorIcon : undefined),
       execute: args => {
         const text = args && (args.text as string);
@@ -121,52 +108,21 @@ const inspector: JupyterFrontEndPlugin<IInspector> = {
       }
     });
 
-    // Add inspector:close command to registry.
-    const closeLabel = trans.__('Hide Contextual Help');
-    commands.addCommand(CommandIDs.close, {
-      caption,
-      isEnabled: () => isInspectorOpen(),
-      label: closeLabel,
-      icon: args => (args.isLauncher ? inspectorIcon : undefined),
-      execute: () => closeInspector()
-    });
-
-    // Add inspector:toggle command to registry.
-    const toggleLabel = trans.__('Show Contextual Help');
-    commands.addCommand(CommandIDs.toggle, {
-      caption,
-      label: toggleLabel,
-      isToggled: () => isInspectorOpen(),
-      execute: args => {
-        if (isInspectorOpen()) {
-          closeInspector();
-        } else {
-          const text = args && (args.text as string);
-          openInspector(text);
-        }
-      }
-    });
-
-    // Add open command to launcher if possible.
-    if (launcher) {
-      launcher.add({ command: CommandIDs.open, args: { isLauncher: true } });
-    }
-
-    // Add toggle command to command palette if possible.
+    // Add command to UI where possible.
     if (palette) {
-      palette.addItem({ command: CommandIDs.toggle, category: toggleLabel });
+      palette.addItem({ command, category: label });
+    }
+    if (launcher) {
+      launcher.add({ command, args: { isLauncher: true } });
     }
 
     // Handle state restoration.
     if (restorer) {
-      void restorer.restore(tracker, {
-        command: CommandIDs.toggle,
-        name: () => 'inspector'
-      });
+      void restorer.restore(tracker, { command, name: () => 'inspector' });
     }
 
     // Create a proxy to pass the `source` to the current inspector.
-    const proxy = Object.defineProperty({} as IInspector, 'source', {
+    const proxy: IInspector = Object.defineProperty({}, 'source', {
       get: (): IInspector.IInspectable | null =>
         !inspector || inspector.isDisposed ? null : inspector.content.source,
       set: (src: IInspector.IInspectable | null) => {

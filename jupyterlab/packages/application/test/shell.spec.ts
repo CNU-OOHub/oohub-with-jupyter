@@ -26,7 +26,7 @@ describe('LabShell', () => {
   });
 
   beforeEach(() => {
-    shell = new LabShell({ waitForRestore: false });
+    shell = new LabShell();
     Widget.attach(shell, document.body);
   });
 
@@ -116,11 +116,11 @@ describe('LabShell', () => {
   });
 
   describe('#restored', () => {
-    it('should resolve when the app is restored for the first time', async () => {
+    it('should resolve when the app is restored for the first time', () => {
       const state = shell.saveLayout();
       const mode: DockPanel.Mode = 'multiple-document';
       shell.restoreLayout(mode, state);
-      await expect(shell.restored).resolves.not.toThrow();
+      return shell.restored;
     });
   });
 
@@ -174,14 +174,14 @@ describe('LabShell', () => {
       widget.id = 'foo';
       shell.add(widget, 'top');
       // top-level title and menu area are added by default
-      expect(toArray(shell.widgets('top')).length).toEqual(3);
+      expect(toArray(shell.widgets('top')).length).toEqual(4);
     });
 
     it('should be a no-op if the widget has no id', () => {
       const widget = new Widget();
       shell.add(widget, 'top');
       // top-level title and menu area are added by default
-      expect(toArray(shell.widgets('top')).length).toEqual(2);
+      expect(toArray(shell.widgets('top')).length).toEqual(3);
     });
 
     it('should accept options', () => {
@@ -189,7 +189,7 @@ describe('LabShell', () => {
       widget.id = 'foo';
       shell.add(widget, 'top', { rank: 10 });
       // top-level title and menu area are added by default
-      expect(toArray(shell.widgets('top')).length).toEqual(3);
+      expect(toArray(shell.widgets('top')).length).toEqual(4);
     });
 
     it('should add widgets according to their ranks', () => {

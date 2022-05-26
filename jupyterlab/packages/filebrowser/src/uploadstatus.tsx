@@ -2,7 +2,7 @@
 // Distributed under the terms of the Modified BSD License.
 //
 
-import { WidgetTracker } from '@jupyterlab/apputils';
+import { VDomModel, VDomRenderer, WidgetTracker } from '@jupyterlab/apputils';
 import { IChangedArgs } from '@jupyterlab/coreutils';
 import { GroupItem, ProgressBar, TextItem } from '@jupyterlab/statusbar';
 import {
@@ -10,7 +10,6 @@ import {
   nullTranslator,
   TranslationBundle
 } from '@jupyterlab/translation';
-import { VDomModel, VDomRenderer } from '@jupyterlab/ui-components';
 import { ArrayExt } from '@lumino/algorithm';
 import React from 'react';
 import { FileBrowser, FileBrowserModel, IUploadModel } from '.';
@@ -87,7 +86,7 @@ export class FileUploadStatus extends VDomRenderer<FileUploadStatus.Model> {
   /**
    * Render the FileUpload status.
    */
-  render(): JSX.Element {
+  render() {
     const uploadPaths = this.model!.items;
     if (uploadPaths.length > 0) {
       const item = this.model!.items[0];
@@ -107,7 +106,7 @@ export class FileUploadStatus extends VDomRenderer<FileUploadStatus.Model> {
     }
   }
 
-  dispose(): void {
+  dispose() {
     super.dispose();
     this._tracker.currentChanged.disconnect(this._onBrowserChange);
   }
@@ -147,7 +146,7 @@ export namespace FileUploadStatus {
     /**
      * The currently uploading items.
      */
-    get items(): IFileUploadItem[] {
+    get items() {
       return this._items;
     }
 

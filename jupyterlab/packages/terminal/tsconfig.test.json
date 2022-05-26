@@ -16,6 +16,15 @@
     },
     {
       "path": "../../testutils"
+    },
+    {
+      "path": "../apputils"
+    },
+    {
+      "path": "../services"
+    },
+    {
+      "path": "../translation"
     }
   ]
 }

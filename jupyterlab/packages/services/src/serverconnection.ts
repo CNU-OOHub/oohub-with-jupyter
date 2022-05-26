@@ -16,11 +16,13 @@ let WEBSOCKET: typeof WebSocket;
 if (typeof window === 'undefined') {
   // Mangle the require statements so it does not get picked up in the
   // browser assets.
+  /* tslint:disable */
   const fetchMod = require('node-fetch');
   FETCH = global.fetch ?? fetchMod;
   REQUEST = global.Request ?? fetchMod.Request;
   HEADERS = global.Headers ?? fetchMod.Headers;
   WEBSOCKET = require('ws');
+  /* tslint:enable */
 } else {
   FETCH = fetch;
   REQUEST = Request;
@@ -111,7 +113,7 @@ export namespace ServerConnection {
    *
    * @returns The full settings object.
    */
-  export function makeSettings(options?: Partial<ISettings>): ISettings {
+  export function makeSettings(options?: Partial<ISettings>) {
     return Private.makeSettings(options);
   }
 

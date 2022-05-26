@@ -10,37 +10,22 @@ import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
-import { ICommandPalette, MainAreaWidget } from '@jupyterlab/apputils';
+
+import { ICommandPalette } from '@jupyterlab/apputils';
+
 import {
+  CodeMirrorSearchProvider,
   ISearchProviderRegistry,
-  SearchDocumentModel,
-  SearchDocumentView,
+  NotebookSearchProvider,
+  SearchInstance,
   SearchProviderRegistry
 } from '@jupyterlab/documentsearch';
+
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { ITranslator } from '@jupyterlab/translation';
 import { Widget } from '@lumino/widgets';
 
 const SEARCHABLE_CLASS = 'jp-mod-searchable';
-
-namespace CommandIDs {
-  /**
-   * Start search in a document
-   */
-  export const search = 'documentsearch:start';
-  /**
-   * Start search and replace in a document
-   */
-  export const searchAndReplace = 'documentsearch:startWithReplace';
-  /**
-   * Find next search match
-   */
-  export const findNext = 'documentsearch:highlightNext';
-  /**
-   * Find previous search match
-   */
-  export const findPrevious = 'documentsearch:highlightPrevious';
-}
 
 const labShellWidgetListener: JupyterFrontEndPlugin<void> = {
   id: '@jupyterlab/documentsearch:labShellWidgetListener',
@@ -57,9 +42,11 @@ const labShellWidgetListener: JupyterFrontEndPlugin<void> = {
       if (!widget) {
         return;
       }
-      if (registry.hasProvider(widget)) {
+      const providerForWidget = registry.getProviderForWidget(widget);
+      if (providerForWidget) {
         widget.addClass(SEARCHABLE_CLASS);
-      } else {
+      }
+      if (!providerForWidget) {
         widget.removeClass(SEARCHABLE_CLASS);
       }
     };
@@ -88,7 +75,7 @@ const labShellWidgetListener: JupyterFrontEndPlugin<void> = {
  * Initialization data for the document-search extension.
  */
 const extension: JupyterFrontEndPlugin<ISearchProviderRegistry> = {
-  id: '@jupyterlab/documentsearch-extension:plugin',
+  id: '@jupyterlab/documentsearch:plugin',
   provides: ISearchProviderRegistry,
   requires: [ITranslator],
   optional: [ICommandPalette, ISettingRegistry],
@@ -96,22 +83,31 @@ const extension: JupyterFrontEndPlugin<ISearchProviderRegistry> = {
   activate: (
     app: JupyterFrontEnd,
     translator: ITranslator,
-    palette: ICommandPalette,
+    palette: ICommandPalette | null,
     settingRegistry: ISettingRegistry | null
   ) => {
     const trans = translator.load('jupyterlab');
 
     let searchDebounceTime = 500;
 
-    // Create registry
-    const registry: SearchProviderRegistry = new SearchProviderRegistry(
-      translator
-    );
+    // Create registry, retrieve all default providers
+    const registry: SearchProviderRegistry = new SearchProviderRegistry();
 
-    const searchViews = new Map<string, SearchDocumentView>();
+    // Register default implementations of the Notebook and CodeMirror search providers
+    registry.register('jp-notebookSearchProvider', NotebookSearchProvider);
+    registry.register('jp-codeMirrorSearchProvider', CodeMirrorSearchProvider);
+
+    const activeSearches = new Map<string, SearchInstance>();
+
+    const startCommand: string = 'documentsearch:start';
+    const startReplaceCommand: string = 'documentsearch:startWithReplace';
+    const nextCommand: string = 'documentsearch:highlightNext';
+    const prevCommand: string = 'documentsearch:highlightPrevious';
 
     if (settingRegistry) {
-      const loadSettings = settingRegistry.load(extension.id);
+      const loadSettings = settingRegistry.load(
+        '@jupyterlab/documentsearch-extension:plugin'
+      );
       const updateSettings = (settings: ISettingRegistry.ISettings): void => {
         searchDebounceTime = settings.get('searchDebounceTime')
           .composite as number;
@@ -129,165 +125,142 @@ const extension: JupyterFrontEndPlugin<ISearchProviderRegistry> = {
         });
     }
 
-    const isEnabled = () => {
-      const widget = app.shell.currentWidget;
-      if (!widget) {
+    const currentWidgetHasSearchProvider = () => {
+      const currentWidget = app.shell.currentWidget;
+      if (!currentWidget) {
         return false;
       }
-      return registry.hasProvider(widget);
+      return registry.getProviderForWidget(currentWidget) !== undefined;
     };
-
-    const getSearchWidget = (widget: Widget | null) => {
-      if (!widget) {
+    const getCurrentWidgetSearchInstance = () => {
+      const currentWidget = app.shell.currentWidget;
+      if (!currentWidget) {
         return;
       }
-      const widgetId = widget.id;
-      let searchView = searchViews.get(widgetId);
-      if (!searchView) {
-        const searchProvider = registry.getProvider(widget);
+      const widgetId = currentWidget.id;
+      let searchInstance = activeSearches.get(widgetId);
+      if (!searchInstance) {
+        const searchProvider = registry.getProviderForWidget(currentWidget);
         if (!searchProvider) {
           return;
         }
-        const searchModel = new SearchDocumentModel(
+        searchInstance = new SearchInstance(
+          currentWidget,
           searchProvider,
+          translator,
           searchDebounceTime
         );
 
-        const newView = new SearchDocumentView(searchModel, translator);
-
-        searchViews.set(widgetId, newView);
+        activeSearches.set(widgetId, searchInstance);
         // find next and previous are now enabled
-        [CommandIDs.findNext, CommandIDs.findPrevious].forEach(id => {
-          app.commands.notifyCommandChanged(id);
-        });
+        app.commands.notifyCommandChanged();
 
-        /**
-         * Activate the target widget when the search panel is closing
-         */
-        newView.closed.connect(() => {
-          if (!widget.isDisposed) {
-            widget.activate();
-          }
+        searchInstance.disposed.connect(() => {
+          activeSearches.delete(widgetId);
+          // find next and previous are now not enabled
+          app.commands.notifyCommandChanged();
         });
-
-        /**
-         * Remove from mapping when the search view is disposed.
-         */
-        newView.disposed.connect(() => {
-          if (!widget.isDisposed) {
-            widget.activate();
-          }
-          searchViews.delete(widgetId);
-          // find next and previous are now disabled
-          [CommandIDs.findNext, CommandIDs.findPrevious].forEach(id => {
-            app.commands.notifyCommandChanged(id);
-          });
-        });
-
-        /**
-         * Dispose resources when the widget is disposed.
-         */
-        widget.disposed.connect(() => {
-          newView.dispose();
-          searchModel.dispose();
-          searchProvider.dispose();
-        });
-
-        searchView = newView;
       }
-
-      if (!searchView.isAttached) {
-        Widget.attach(searchView, widget.node);
-        if (widget instanceof MainAreaWidget) {
-          // Offset the position of the search widget to not cover the toolbar nor the content header.
-          // TODO this does not update once the search widget is displayed.
-          searchView.node.style.top = `${
-            widget.toolbar.node.getBoundingClientRect().height +
-            widget.contentHeader.node.getBoundingClientRect().height
-          }px`;
-        }
-        if (searchView.model.searchExpression) {
-          searchView.model.refresh();
-        }
-      }
-      return searchView;
+      return searchInstance;
     };
 
-    app.commands.addCommand(CommandIDs.search, {
+    app.commands.addCommand(startCommand, {
       label: trans.__('Find…'),
-      isEnabled: isEnabled,
+      isEnabled: currentWidgetHasSearchProvider,
       execute: args => {
-        const searchWidget = getSearchWidget(app.shell.currentWidget);
-        if (searchWidget) {
+        const searchInstance = getCurrentWidgetSearchInstance();
+        if (searchInstance) {
           const searchText = args['searchText'] as string;
           if (searchText) {
-            searchWidget.setSearchText(searchText);
+            searchInstance.setSearchText(searchText);
           }
-          searchWidget.focusSearchInput();
+          searchInstance.focusInput();
         }
       }
     });
 
-    app.commands.addCommand(CommandIDs.searchAndReplace, {
+    app.commands.addCommand(startReplaceCommand, {
       label: trans.__('Find and Replace…'),
-      isEnabled: isEnabled,
+      isEnabled: currentWidgetHasSearchProvider,
       execute: args => {
-        const searchWidget = getSearchWidget(app.shell.currentWidget);
-        if (searchWidget) {
+        const searchInstance = getCurrentWidgetSearchInstance();
+        if (searchInstance) {
           const searchText = args['searchText'] as string;
           if (searchText) {
-            searchWidget.setSearchText(searchText);
+            searchInstance.setSearchText(searchText);
           }
           const replaceText = args['replaceText'] as string;
           if (replaceText) {
-            searchWidget.setReplaceText(replaceText);
+            searchInstance.setReplaceText(replaceText);
           }
-          searchWidget.showReplace();
-          searchWidget.focusSearchInput();
+          searchInstance.showReplace();
+          searchInstance.focusInput();
         }
       }
     });
 
-    app.commands.addCommand(CommandIDs.findNext, {
+    app.commands.addCommand(nextCommand, {
       label: trans.__('Find Next'),
-      isEnabled: () =>
-        !!app.shell.currentWidget &&
-        searchViews.has(app.shell.currentWidget.id),
+      isEnabled: () => {
+        const currentWidget = app.shell.currentWidget;
+        if (!currentWidget) {
+          return false;
+        }
+        return activeSearches.has(currentWidget.id);
+      },
       execute: async () => {
         const currentWidget = app.shell.currentWidget;
         if (!currentWidget) {
           return;
         }
+        const instance = activeSearches.get(currentWidget.id);
+        if (!instance) {
+          return;
+        }
 
-        await searchViews.get(currentWidget.id)?.model.highlightNext();
+        await instance.provider.highlightNext();
+        instance.updateIndices();
       }
     });
 
-    app.commands.addCommand(CommandIDs.findPrevious, {
+    app.commands.addCommand(prevCommand, {
       label: trans.__('Find Previous'),
-      isEnabled: () =>
-        !!app.shell.currentWidget &&
-        searchViews.has(app.shell.currentWidget.id),
+      isEnabled: () => {
+        const currentWidget = app.shell.currentWidget;
+        if (!currentWidget) {
+          return false;
+        }
+        return activeSearches.has(currentWidget.id);
+      },
       execute: async () => {
         const currentWidget = app.shell.currentWidget;
         if (!currentWidget) {
           return;
         }
+        const instance = activeSearches.get(currentWidget.id);
+        if (!instance) {
+          return;
+        }
 
-        await searchViews.get(currentWidget.id)?.model.highlightPrevious();
+        await instance.provider.highlightPrevious();
+        instance.updateIndices();
       }
     });
 
     // Add the command to the palette.
     if (palette) {
-      [CommandIDs.search, CommandIDs.findNext, CommandIDs.findPrevious].forEach(
-        command => {
-          palette.addItem({
-            command,
-            category: trans.__('Main Area')
-          });
-        }
-      );
+      palette.addItem({
+        command: startCommand,
+        category: trans.__('Main Area')
+      });
+      palette.addItem({
+        command: nextCommand,
+        category: trans.__('Main Area')
+      });
+      palette.addItem({
+        command: prevCommand,
+        category: trans.__('Main Area')
+      });
     }
 
     // Provide the registry to the system.

@@ -166,7 +166,7 @@ export class OutputModel implements IOutputModel {
       this._updateObservable(this._metadata, options.metadata!);
       this._rawMetadata = options.metadata;
     }
-    this._changed.emit();
+    this._changed.emit(void 0);
   }
 
   /**
@@ -234,7 +234,7 @@ export namespace OutputModel {
   /**
    * Get the data for an output.
    *
-   * @param output - A kernel output message payload.
+   * @params output - A kernel output message payload.
    *
    * @returns - The data for the payload.
    */
@@ -245,7 +245,7 @@ export namespace OutputModel {
   /**
    * Get the metadata from an output message.
    *
-   * @param output - A kernel output message payload.
+   * @params output - A kernel output message payload.
    *
    * @returns - The metadata for the payload.
    */

@@ -84,7 +84,6 @@ export class NotebookWidgetFactory extends ABCWidgetFactory<
     context: DocumentRegistry.IContext<INotebookModel>,
     source?: NotebookPanel
   ): NotebookPanel {
-    const translator = (context as any).translator;
     const nbOptions = {
       rendermime: source
         ? source.content.rendermime
@@ -95,7 +94,7 @@ export class NotebookWidgetFactory extends ABCWidgetFactory<
       notebookConfig: source
         ? source.content.notebookConfig
         : this._notebookConfig,
-      translator
+      translator: this.translator
     };
     const content = this.contentFactory.createNotebook(nbOptions);
 

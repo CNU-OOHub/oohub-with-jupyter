@@ -1,18 +1,21 @@
 // Copyright (c) Jupyter Development Team.
 // Distributed under the terms of the Modified BSD License.
 
-import { showErrorMessage } from '@jupyterlab/apputils';
-import { IDocumentManager } from '@jupyterlab/docmanager';
-import { Contents, ServerConnection } from '@jupyterlab/services';
-import { ITranslator, nullTranslator } from '@jupyterlab/translation';
 import {
   FilenameSearcher,
-  IScore,
   ReactWidget,
-  SidePanel
-} from '@jupyterlab/ui-components';
+  showErrorMessage,
+  Toolbar
+} from '@jupyterlab/apputils';
+import { IDocumentManager } from '@jupyterlab/docmanager';
+import { Contents, ServerConnection } from '@jupyterlab/services';
+import {
+  ITranslator,
+  nullTranslator,
+  TranslationBundle
+} from '@jupyterlab/translation';
 import { IIterator } from '@lumino/algorithm';
-import { Panel } from '@lumino/widgets';
+import { PanelLayout, Widget } from '@lumino/widgets';
 import { BreadCrumbs } from './crumbs';
 import { DirListing } from './listing';
 import { FilterFileBrowserModel } from './model';
@@ -21,11 +24,6 @@ import { FilterFileBrowserModel } from './model';
  * The class name added to file browsers.
  */
 const FILE_BROWSER_CLASS = 'jp-FileBrowser';
-
-/**
- * The class name added to file browser panel (gather filter, breadcrumbs and listing).
- */
-const FILE_BROWSER_PANEL_CLASS = 'jp-FileBrowser-Panel';
 
 /**
  * The class name added to the filebrowser crumbs node.
@@ -54,54 +52,43 @@ const LISTING_CLASS = 'jp-FileBrowser-listing';
  * and presents itself as a flat list of files and directories with
  * breadcrumbs.
  */
-export class FileBrowser extends SidePanel {
+export class FileBrowser extends Widget {
   /**
    * Construct a new file browser.
    *
    * @param options - The file browser options.
    */
   constructor(options: FileBrowser.IOptions) {
-    super({ content: new Panel(), translator: options.translator });
+    super();
     this.addClass(FILE_BROWSER_CLASS);
-    this.toolbar.addClass(TOOLBAR_CLASS);
     this.id = options.id;
-    const translator = (this.translator = options.translator ?? nullTranslator);
 
     const model = (this.model = options.model);
     const renderer = options.renderer;
+    const translator = this.translator;
 
     model.connectionFailure.connect(this._onConnectionFailure, this);
+    this.translator = options.translator || nullTranslator;
     this._manager = model.manager;
-
+    this._trans = this.translator.load('jupyterlab');
+    this.crumbs = new BreadCrumbs({ model, translator });
+    this.toolbar = new Toolbar<Widget>();
     // a11y
     this.toolbar.node.setAttribute('role', 'navigation');
     this.toolbar.node.setAttribute(
       'aria-label',
       this._trans.__('file browser')
     );
-
     this._directoryPending = false;
-
-    // File browser widgets container
-    this.mainPanel = new Panel();
-    this.mainPanel.addClass(FILE_BROWSER_PANEL_CLASS);
-    this.mainPanel.title.label = this._trans.__('File Browser');
-
-    this.crumbs = new BreadCrumbs({ model, translator });
-    this.crumbs.addClass(CRUMBS_CLASS);
 
     this.listing = this.createDirListing({
       model,
       renderer,
-      translator
+      translator: this.translator
     });
-    this.listing.addClass(LISTING_CLASS);
 
     this._filenameSearcher = FilenameSearcher({
-      updateFilter: (
-        filterFn: (item: string) => Partial<IScore> | null,
-        query?: string
-      ) => {
+      updateFilter: (filterFn: (item: string) => boolean) => {
         this.listing.model.setFilter(value => {
           return filterFn(value.name.toLowerCase());
         });
@@ -109,13 +96,17 @@ export class FileBrowser extends SidePanel {
       useFuzzyFilter: this._useFuzzyFilter,
       placeholder: this._trans.__('Filter files by name')
     });
+
+    this.crumbs.addClass(CRUMBS_CLASS);
+    this.toolbar.addClass(TOOLBAR_CLASS);
     this._filenameSearcher.addClass(FILTERBOX_CLASS);
+    this.listing.addClass(LISTING_CLASS);
 
-    this.mainPanel.addWidget(this._filenameSearcher);
-    this.mainPanel.addWidget(this.crumbs);
-    this.mainPanel.addWidget(this.listing);
-
-    this.addWidget(this.mainPanel);
+    this.layout = new PanelLayout();
+    this.layout.addWidget(this.toolbar);
+    this.layout.addWidget(this._filenameSearcher);
+    this.layout.addWidget(this.crumbs);
+    this.layout.addWidget(this.listing);
 
     if (options.restore !== false) {
       void model.restore(this.id);
@@ -126,6 +117,16 @@ export class FileBrowser extends SidePanel {
    * The model used by the file browser.
    */
   readonly model: FilterFileBrowserModel;
+
+  /**
+   * The toolbar used by the file browser.
+   */
+  readonly toolbar: Toolbar<Widget>;
+
+  /**
+   * Override Widget.layout with a more specific PanelLayout type.
+   */
+  layout: PanelLayout;
 
   /**
    * Whether to show active file in file browser
@@ -160,15 +161,8 @@ export class FileBrowser extends SidePanel {
   set useFuzzyFilter(value: boolean) {
     this._useFuzzyFilter = value;
 
-    // Detach and dispose the current widget
-    this._filenameSearcher.parent = null;
-    this._filenameSearcher.dispose();
-
     this._filenameSearcher = FilenameSearcher({
-      updateFilter: (
-        filterFn: (item: string) => Partial<IScore> | null,
-        query?: string
-      ) => {
+      updateFilter: (filterFn: (item: string) => boolean) => {
         this.listing.model.setFilter(value => {
           return filterFn(value.name.toLowerCase());
         });
@@ -179,7 +173,13 @@ export class FileBrowser extends SidePanel {
     });
     this._filenameSearcher.addClass(FILTERBOX_CLASS);
 
-    this.mainPanel.insertWidget(0, this._filenameSearcher);
+    this.layout.removeWidget(this._filenameSearcher);
+    this.layout.removeWidget(this.crumbs);
+    this.layout.removeWidget(this.listing);
+
+    this.layout.addWidget(this._filenameSearcher);
+    this.layout.addWidget(this.crumbs);
+    this.layout.addWidget(this.listing);
   }
 
   /**
@@ -192,22 +192,6 @@ export class FileBrowser extends SidePanel {
   set showHiddenFiles(value: boolean) {
     this.model.showHiddenFiles(value);
     this._showHiddenFiles = value;
-  }
-
-  /**
-   * Whether to show checkboxes next to files and folders
-   */
-  get showFileCheckboxes(): boolean {
-    return this._showFileCheckboxes;
-  }
-
-  set showFileCheckboxes(value: boolean) {
-    if (this.listing.setColumnVisibility) {
-      this.listing.setColumnVisibility('is_selected', value);
-      this._showFileCheckboxes = value;
-    } else {
-      console.warn('Listing does not support toggling column visibility');
-    }
   }
 
   /**
@@ -417,8 +401,7 @@ export class FileBrowser extends SidePanel {
 
   protected listing: DirListing;
   protected crumbs: BreadCrumbs;
-  protected mainPanel: Panel;
-
+  private _trans: TranslationBundle;
   private _filenameSearcher: ReactWidget;
   private _manager: IDocumentManager;
   private _directoryPending: boolean;
@@ -427,7 +410,6 @@ export class FileBrowser extends SidePanel {
   private _showLastModifiedColumn: boolean = true;
   private _useFuzzyFilter: boolean = true;
   private _showHiddenFiles: boolean = false;
-  private _showFileCheckboxes: boolean = false;
 }
 
 /**

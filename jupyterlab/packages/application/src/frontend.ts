@@ -109,7 +109,7 @@ export abstract class JupyterFrontEnd<
   /**
    * The service manager used by the application.
    */
-  readonly serviceManager: ServiceManager.IManager;
+  readonly serviceManager: ServiceManager;
 
   /**
    * The application form factor, e.g., `desktop` or `mobile`.
@@ -231,7 +231,7 @@ export namespace JupyterFrontEnd {
     /**
      * The service manager used by the application.
      */
-    serviceManager?: ServiceManager.IManager;
+    serviceManager?: ServiceManager;
 
     /**
      * Promise that resolves when state is first restored, returning layout

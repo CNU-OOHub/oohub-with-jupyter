@@ -4,7 +4,6 @@
 
 const path = require('path');
 const webpack = require('webpack');
-const miniSVGDataURI = require('mini-svg-data-uri');
 
 module.exports = {
   entry: './src/inpage/index.ts',
@@ -26,44 +25,46 @@ module.exports = {
     rules: [
       { test: /\.ts$/, use: ['ts-loader'] },
       { test: /\.css$/, use: ['style-loader', 'css-loader'] },
-      { test: /\.md$/, type: 'asset/source' },
-      { test: /\.txt$/, type: 'asset/source' },
+      { test: /\.md$/, use: 'raw-loader' },
+      { test: /\.txt$/, use: 'raw-loader' },
       {
         test: /\.js$/,
         enforce: 'pre',
         use: ['source-map-loader']
       },
-      { test: /\.(jpg|png|gif)$/, type: 'asset/resource' },
-      { test: /\.js.map$/, type: 'asset/resource' },
+      { test: /\.(jpg|png|gif)$/, use: 'file-loader' },
+      { test: /\.js.map$/, use: 'file-loader' },
       {
         test: /\.woff2(\?v=\d+\.\d+\.\d+)?$/,
-        type: 'asset'
+        use: 'url-loader?limit=10000&mimetype=application/font-woff'
       },
       {
         test: /\.woff(\?v=\d+\.\d+\.\d+)?$/,
-        type: 'asset'
+        use: 'url-loader?limit=10000&mimetype=application/font-woff'
       },
       {
         test: /\.ttf(\?v=\d+\.\d+\.\d+)?$/,
-        type: 'asset'
+        use: 'url-loader?limit=10000&mimetype=application/octet-stream'
       },
       {
         test: /\.otf(\?v=\d+\.\d+\.\d+)?$/,
-        type: 'asset'
+        use: 'url-loader?limit=10000&mimetype=application/octet-stream'
       },
-      { test: /\.eot(\?v=\d+\.\d+\.\d+)?$/, type: 'asset/resource' },
+      { test: /\.eot(\?v=\d+\.\d+\.\d+)?$/, use: 'file-loader' },
       {
         test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,
         issuer: /\.css$/,
-        type: 'asset',
-        generator: {
-          dataUrl: content => miniSVGDataURI(content.toString())
+        use: {
+          loader: 'svg-url-loader',
+          options: { encoding: 'none', limit: 10000 }
         }
       },
       {
         test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,
         issuer: /\.js$/,
-        type: 'asset/source'
+        use: {
+          loader: 'raw-loader'
+        }
       }
     ]
   },

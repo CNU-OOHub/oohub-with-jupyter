@@ -16,9 +16,6 @@
       "path": "../coreutils"
     },
     {
-      "path": "../documentsearch"
-    },
-    {
       "path": "../nbformat"
     },
     {
@@ -32,9 +29,6 @@
     },
     {
       "path": "../translation"
-    },
-    {
-      "path": "../ui-components"
     }
   ]
 }

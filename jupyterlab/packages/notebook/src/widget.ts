@@ -144,12 +144,6 @@ type RenderingLayout = 'default' | 'side-by-side';
  */
 const HEADING_COLLAPSER_CLASS = 'jp-collapseHeadingButton';
 
-/**
- * The class that controls the visibility of "heading collapser" and "show hidden cells" buttons.
- */
-const HEADING_COLLAPSER_VISBILITY_CONTROL_CLASS =
-  'jp-mod-showHiddenCellsButton';
-
 const SIDE_BY_SIDE_CLASS = 'jp-mod-sideBySide';
 
 /**
@@ -160,7 +154,6 @@ export type NotebookMode = 'command' | 'edit';
 if ((window as any).requestIdleCallback === undefined) {
   // On Safari, requestIdleCallback is not available, so we use replacement functions for `idleCallbacks`
   // See: https://developer.mozilla.org/en-US/docs/Web/API/Background_Tasks_API#falling_back_to_settimeout
-  // eslint-disable-next-line @typescript-eslint/ban-types
   (window as any).requestIdleCallback = function (handler: Function) {
     let startTime = Date.now();
     return setTimeout(function () {
@@ -198,7 +191,7 @@ export class StaticNotebook extends Widget {
     this.node.dataset[UNDOER] = 'true';
     this.node.dataset[CODE_RUNNER] = 'true';
     this.rendermime = options.rendermime;
-    this.translator = options.translator || nullTranslator;
+    this.translator = options.translator ?? nullTranslator;
     this.layout = new Private.NotebookPanelLayout();
     this.contentFactory =
       options.contentFactory || StaticNotebook.defaultContentFactory;
@@ -206,7 +199,6 @@ export class StaticNotebook extends Widget {
       options.editorConfig || StaticNotebook.defaultEditorConfig;
     this.notebookConfig =
       options.notebookConfig || StaticNotebook.defaultNotebookConfig;
-    this._updateNotebookConfig();
     this._mimetypeService = options.mimeTypeService;
     this.renderingLayout = options.notebookConfig?.renderingLayout;
 
@@ -235,10 +227,6 @@ export class StaticNotebook extends Widget {
         }
       );
     }
-  }
-
-  get cellCollapsed(): ISignal<this, Cell> {
-    return this._cellCollapsed;
   }
 
   /**
@@ -638,7 +626,7 @@ export class StaticNotebook extends Widget {
         timeRemaining < this.notebookConfig.remainingTimeBeforeRescheduling
       ) {
         if (this._idleCallBack) {
-          window.cancelIdleCallback(this._idleCallBack);
+          (window as any).cancelIdleCallback(this._idleCallBack);
           this._idleCallBack = null;
         }
         this._scheduleCellRenderOnIdle();
@@ -684,7 +672,6 @@ export class StaticNotebook extends Widget {
       contentFactory,
       updateEditorOnShow: false,
       placeholder: false,
-      translator: this.translator,
       maxNumberOutputs: this.notebookConfig.maxNumberOutputs
     };
     const cell = this.contentFactory.createCodeCell(options, this);
@@ -708,17 +695,16 @@ export class StaticNotebook extends Widget {
       contentFactory,
       updateEditorOnShow: false,
       placeholder: false,
-      showEditorForReadOnlyMarkdown:
-        this._notebookConfig.showEditorForReadOnlyMarkdown
+      showEditorForReadOnlyMarkdown: this._notebookConfig
+        .showEditorForReadOnlyMarkdown
     };
     const cell = this.contentFactory.createMarkdownCell(options, this);
     cell.syncCollapse = true;
     cell.syncEditable = true;
     // Connect collapsed signal for each markdown cell widget
-    cell.headingCollapsedChanged.connect(
+    cell.toggleCollapsedSignal.connect(
       (newCell: MarkdownCell, collapsed: boolean) => {
         NotebookActions.setHeadingCollapse(newCell, collapsed, this);
-        this._cellCollapsed.emit(newCell);
       }
     );
     return cell;
@@ -854,21 +840,16 @@ export class StaticNotebook extends Widget {
       'jp-mod-scrollPastEnd',
       this._notebookConfig.scrollPastEnd
     );
-    // Control visibility of heading collapser UI
-    this.toggleClass(
-      HEADING_COLLAPSER_VISBILITY_CONTROL_CLASS,
-      this._notebookConfig.showHiddenCellsButton
-    );
+
     // Control editor visibility for read-only Markdown cells
-    const showEditorForReadOnlyMarkdown =
-      this._notebookConfig.showEditorForReadOnlyMarkdown;
+    const showEditorForReadOnlyMarkdown = this._notebookConfig
+      .showEditorForReadOnlyMarkdown;
     // 'this._cellsArray' check is here as '_updateNotebookConfig()'
     // can be called before 'this._cellsArray' is defined
     if (showEditorForReadOnlyMarkdown !== undefined && this._cellsArray) {
       for (const cell of this._cellsArray) {
         if (cell.model.type === 'markdown') {
-          (cell as MarkdownCell).showEditorForReadOnly =
-            showEditorForReadOnlyMarkdown;
+          (cell as MarkdownCell).showEditorForReadOnly = showEditorForReadOnlyMarkdown;
         }
       }
     }
@@ -885,7 +866,6 @@ export class StaticNotebook extends Widget {
     return this._toRenderMap.size;
   }
 
-  private _cellCollapsed = new Signal<this, Cell>(this);
   private _editorConfig = StaticNotebook.defaultEditorConfig;
   private _notebookConfig = StaticNotebook.defaultNotebookConfig;
   private _mimetype = 'text/plain';
@@ -1025,11 +1005,6 @@ export namespace StaticNotebook {
    */
   export interface INotebookConfig {
     /**
-     * Show hidden cells button if collapsed
-     */
-    showHiddenCellsButton: boolean;
-
-    /**
      * Enable scrolling past the last cell
      */
     scrollPastEnd: boolean;
@@ -1111,7 +1086,6 @@ export namespace StaticNotebook {
    * Default configuration options for notebooks.
    */
   export const defaultNotebookConfig: INotebookConfig = {
-    showHiddenCellsButton: true,
     scrollPastEnd: true,
     defaultCell: 'code',
     recordTiming: false,
@@ -1133,8 +1107,7 @@ export namespace StaticNotebook {
    */
   export class ContentFactory
     extends Cell.ContentFactory
-    implements IContentFactory
-  {
+    implements IContentFactory {
     /**
      * Create a new code cell widget.
      *
@@ -1926,11 +1899,7 @@ export class Notebook extends StaticNotebook {
         activeCell.editor.focus();
       }
     }
-    if (
-      (force && !this.node.contains(document.activeElement)) ||
-      // Focus notebook if active cell changes but does not have focus.
-      (activeCell && !activeCell.node.contains(document.activeElement))
-    ) {
+    if (force && !this.node.contains(document.activeElement)) {
       this.node.focus();
     }
   }

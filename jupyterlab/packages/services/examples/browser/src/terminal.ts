@@ -5,7 +5,7 @@ import { Terminal, TerminalManager } from '@jupyterlab/services';
 
 import { log } from './log';
 
-export async function main(): Promise<void> {
+export async function main() {
   log('Terminal');
 
   // See if terminals are available

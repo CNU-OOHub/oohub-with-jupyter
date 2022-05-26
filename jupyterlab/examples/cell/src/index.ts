@@ -13,8 +13,7 @@ import '@jupyterlab/theme-light-extension/style/theme.css';
 import '@jupyterlab/completer/style/index.css';
 import '../index.css';
 
-import { Toolbar as AppToolbar, SessionContext } from '@jupyterlab/apputils';
-import { Toolbar } from '@jupyterlab/ui-components';
+import { SessionContext, Toolbar } from '@jupyterlab/apputils';
 
 import { CodeCell, CodeCellModel } from '@jupyterlab/cells';
 
@@ -24,8 +23,7 @@ import {
   Completer,
   CompleterModel,
   CompletionHandler,
-  ConnectorProxy,
-  KernelCompleterProvider
+  KernelConnector
 } from '@jupyterlab/completer';
 
 import {
@@ -91,23 +89,14 @@ function main(): void {
   const editor = cellWidget.editor;
   const model = new CompleterModel();
   const completer = new Completer({ editor, model });
-  const timeout = 1000;
-  const provider = new KernelCompleterProvider();
-  const connector = new ConnectorProxy(
-    { widget: cellWidget, editor, session: sessionContext.session },
-    [provider],
-    timeout
-  );
+  const connector = new KernelConnector({ session: sessionContext.session });
   const handler = new CompletionHandler({ completer, connector });
 
   //sessionContext.session?.kernel.
   void sessionContext.ready.then(() => {
-    const provider = new KernelCompleterProvider();
-    handler.connector = new ConnectorProxy(
-      { widget: cellWidget, editor, session: sessionContext.session },
-      [provider],
-      timeout
-    );
+    handler.connector = new KernelConnector({
+      session: sessionContext.session
+    });
   });
 
   // Set the handler's editor.
@@ -120,13 +109,10 @@ function main(): void {
   // Create a toolbar for the cell.
   const toolbar = new Toolbar();
   toolbar.addItem('spacer', Toolbar.createSpacerItem());
-  toolbar.addItem(
-    'interrupt',
-    AppToolbar.createInterruptButton(sessionContext)
-  );
-  toolbar.addItem('restart', AppToolbar.createRestartButton(sessionContext));
-  toolbar.addItem('name', AppToolbar.createKernelNameItem(sessionContext));
-  toolbar.addItem('status', AppToolbar.createKernelStatusItem(sessionContext));
+  toolbar.addItem('interrupt', Toolbar.createInterruptButton(sessionContext));
+  toolbar.addItem('restart', Toolbar.createRestartButton(sessionContext));
+  toolbar.addItem('name', Toolbar.createKernelNameItem(sessionContext));
+  toolbar.addItem('status', Toolbar.createKernelStatusItem(sessionContext));
 
   // Lay out the widgets.
   const panel = new BoxPanel();

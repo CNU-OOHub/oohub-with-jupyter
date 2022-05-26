@@ -13,5 +13,4 @@ export * from './headerfooter';
 export * from './inputarea';
 export * from './model';
 export * from './placeholder';
-export * from './searchprovider';
 export * from './widget';

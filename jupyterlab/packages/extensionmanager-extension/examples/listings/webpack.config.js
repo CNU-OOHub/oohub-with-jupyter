@@ -1,15 +1,14 @@
 // Copyright (c) Jupyter Development Team.
 // Distributed under the terms of the Modified BSD License.
-const data = require('./package.json');
-const Build = require('@jupyterlab/builder').Build;
-const miniSVGDataURI = require('mini-svg-data-uri');
+var data = require('./package.json');
+var Build = require('@jupyterlab/builder').Build;
 
-const names = Object.keys(data.dependencies).filter(function (name) {
-  const packageData = require(name + '/package.json');
+var names = Object.keys(data.dependencies).filter(function (name) {
+  var packageData = require(name + '/package.json');
   return packageData.jupyterlab !== undefined;
 });
 
-const extras = Build.ensureAssets({
+var extras = Build.ensureAssets({
   packageNames: names,
   output: './build'
 });
@@ -30,30 +29,30 @@ module.exports = [
     module: {
       rules: [
         { test: /\.css$/, use: ['style-loader', 'css-loader'] },
-        { test: /\.html$/, type: 'asset/resource' },
-        { test: /\.md$/, type: 'asset/source' },
-        { test: /\.(jpg|png|gif)$/, type: 'asset/resource' },
-        { test: /\.js.map$/, type: 'asset/resource' },
+        { test: /\.html$/, use: 'file-loader' },
+        { test: /\.md$/, use: 'raw-loader' },
+        { test: /\.(jpg|png|gif)$/, use: 'file-loader' },
+        { test: /\.js.map$/, use: 'file-loader' },
         {
           test: /\.woff2(\?v=\d+\.\d+\.\d+)?$/,
-          type: 'asset'
+          use: 'url-loader?limit=10000&mimetype=application/font-woff'
         },
         {
           test: /\.woff(\?v=\d+\.\d+\.\d+)?$/,
-          type: 'asset'
+          use: 'url-loader?limit=10000&mimetype=application/font-woff'
         },
         {
           test: /\.ttf(\?v=\d+\.\d+\.\d+)?$/,
-          type: 'asset'
+          use: 'url-loader?limit=10000&mimetype=application/octet-stream'
         },
-        { test: /\.eot(\?v=\d+\.\d+\.\d+)?$/, type: 'asset/resource' },
+        { test: /\.eot(\?v=\d+\.\d+\.\d+)?$/, use: 'file-loader' },
         {
           // In .css files, svg is loaded as a data URI.
           test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,
           issuer: /\.css$/,
-          type: 'asset',
-          generator: {
-            dataUrl: content => miniSVGDataURI(content.toString())
+          use: {
+            loader: 'svg-url-loader',
+            options: { encoding: 'none', limit: 10000 }
           }
         },
         {
@@ -61,7 +60,9 @@ module.exports = [
           // must be loaded as a raw string instead of data URIs.
           test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,
           issuer: /\.js$/,
-          type: 'asset/resource'
+          use: {
+            loader: 'raw-loader'
+          }
         }
       ]
     }

@@ -25,14 +25,10 @@ test.describe('Completer', () => {
       // we need to wait until the completer gets bound to the cell after entering it
       await page.waitForTimeout(50);
       await page.keyboard.press('Tab');
-      let completer = page.locator(COMPLETER_SELECTOR);
+
+      const completer = page.locator(COMPLETER_SELECTOR);
       await completer.waitFor();
-      await page.keyboard.press('Escape');
-      await page.waitForTimeout(50);
-      await expect(completer).toBeHidden();
-      await page.keyboard.press('Tab');
-      completer = page.locator(COMPLETER_SELECTOR);
-      await completer.waitFor();
+
       const imageName = 'completer.png';
       // TODO: on first trigger types are not properly displayed, reference image will need updating
       expect(await completer.screenshot()).toMatchSnapshot(imageName);
@@ -53,15 +49,10 @@ test.describe('Completer', () => {
       await page.waitForTimeout(50);
       await page.keyboard.press('Tab');
 
-      let completer = page.locator(COMPLETER_SELECTOR);
+      const completer = page.locator(COMPLETER_SELECTOR);
       await completer.waitFor();
-      await page.keyboard.press('Escape');
-      await page.waitForTimeout(50);
-      await expect(completer).toBeHidden();
-      await page.keyboard.press('Tab');
-      completer = page.locator(COMPLETER_SELECTOR);
-      await completer.waitFor();
-      await page.keyboard.type('g', { delay: 50 });
+
+      await page.keyboard.type('g', { delay: 10 });
 
       const imageName = 'completer-filter.png';
       expect(await completer.screenshot()).toMatchSnapshot(imageName);
@@ -74,7 +65,7 @@ test.describe('Completer', () => {
 
       await page.click('button:has-text("Select")');
 
-      await page.waitForSelector('[aria-label="Code Cell Content"]');
+      await page.waitForSelector('text=[ ]: ​ >> div[role="presentation"]');
       await page.waitForSelector('text=| Idle');
 
       await page.keyboard.type('import getopt\ngetopt.');

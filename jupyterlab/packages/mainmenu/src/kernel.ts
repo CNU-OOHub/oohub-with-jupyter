@@ -2,16 +2,17 @@
 // Distributed under the terms of the Modified BSD License.
 
 import { IRankedMenu, RankedMenu } from '@jupyterlab/ui-components';
-import { SemanticCommand } from '@jupyterlab/apputils';
+import { Widget } from '@lumino/widgets';
+import { IMenuExtender } from './tokens';
 
 /**
  * An interface for a Kernel menu.
  */
 export interface IKernelMenu extends IRankedMenu {
   /**
-   * Semantic commands IKernelUsers for the Kernel menu.
+   * A set storing IKernelUsers for the Kernel menu.
    */
-  readonly kernelUsers: IKernelMenu.IKernelUser;
+  readonly kernelUsers: Set<IKernelMenu.IKernelUser<Widget>>;
 }
 
 /**
@@ -23,20 +24,21 @@ export class KernelMenu extends RankedMenu implements IKernelMenu {
    */
   constructor(options: IRankedMenu.IOptions) {
     super(options);
-    this.kernelUsers = {
-      changeKernel: new SemanticCommand(),
-      clearWidget: new SemanticCommand(),
-      interruptKernel: new SemanticCommand(),
-      reconnectToKernel: new SemanticCommand(),
-      restartKernel: new SemanticCommand(),
-      shutdownKernel: new SemanticCommand()
-    };
+    this.kernelUsers = new Set<IKernelMenu.IKernelUser<Widget>>();
   }
 
   /**
-   * Semantic commands IKernelUsers for the Kernel menu.
+   * A set storing IKernelUsers for the Kernel menu.
    */
-  readonly kernelUsers: IKernelMenu.IKernelUser;
+  readonly kernelUsers: Set<IKernelMenu.IKernelUser<Widget>>;
+
+  /**
+   * Dispose of the resources held by the kernel menu.
+   */
+  dispose(): void {
+    this.kernelUsers.clear();
+    super.dispose();
+  }
 }
 
 /**
@@ -47,36 +49,45 @@ export namespace IKernelMenu {
    * Interface for a Kernel user to register itself
    * with the IKernelMenu's semantic extension points.
    */
-  export interface IKernelUser {
+  export interface IKernelUser<T extends Widget> extends IMenuExtender<T> {
     /**
-     * A semantic command to interrupt the kernel.
+     * A function to interrupt the kernel.
      */
-    interruptKernel: SemanticCommand;
+    interruptKernel?: (widget: T) => Promise<void>;
 
     /**
-     * A semantic command to reconnect to the kernel
+     * A function to reconnect to the kernel
      */
-    reconnectToKernel: SemanticCommand;
+    reconnectToKernel?: (widget: T) => Promise<void>;
 
     /**
-     * A semantic command to restart the kernel, which
+     * A function to restart the kernel, which
      * returns a promise of whether the kernel was restarted.
      */
-    restartKernel: SemanticCommand;
+    restartKernel?: (widget: T) => Promise<boolean>;
 
     /**
-     * A semantic command to clear the widget.
+     * A function to restart the kernel and clear the widget, which
+     * returns a promise of whether the kernel was restarted.
      */
-    clearWidget: SemanticCommand;
+    restartKernelAndClear?: (widget: T) => Promise<boolean>;
 
     /**
-     * A semantic command to change the kernel.
+     * A function to change the kernel.
      */
-    changeKernel: SemanticCommand;
+    changeKernel?: (widget: T) => Promise<void>;
 
     /**
-     * A semantic command to shut down the kernel.
+     * A function to shut down the kernel.
      */
-    shutdownKernel: SemanticCommand;
+    shutdownKernel?: (widget: T) => Promise<void>;
+
+    /**
+     * A function to return the label associated to the `restartKernelAndClear` action.
+     *
+     * This function receives the number of items `n` to be able to provided
+     * correct pluralized forms of translations.
+     */
+    restartKernelAndClearLabel?: (n: number) => string;
   }
 }

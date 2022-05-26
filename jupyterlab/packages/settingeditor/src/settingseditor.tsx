@@ -1,9 +1,9 @@
 import { ILabStatus } from '@jupyterlab/application';
-import { showDialog } from '@jupyterlab/apputils';
+import { ReactWidget, showDialog } from '@jupyterlab/apputils';
 import { ISettingRegistry, Settings } from '@jupyterlab/settingregistry';
 import { IStateDB } from '@jupyterlab/statedb';
 import { ITranslator, nullTranslator } from '@jupyterlab/translation';
-import { IFormComponentRegistry, ReactWidget } from '@jupyterlab/ui-components';
+import { IFormComponentRegistry } from '@jupyterlab/ui-components';
 import { CommandRegistry } from '@lumino/commands';
 import { IDisposable } from '@lumino/disposable';
 import { Message } from '@lumino/messaging';
@@ -113,7 +113,7 @@ export class SettingsEditor extends SplitPanel {
   protected onCloseRequest(msg: Message): void {
     const trans = this.translator.load('jupyterlab');
     if (this._list.hasErrors) {
-      showDialog({
+      void showDialog({
         title: trans.__('Warning'),
         body: trans.__(
           'Unsaved changes due to validation error. Continue without saving?'
@@ -125,7 +125,7 @@ export class SettingsEditor extends SplitPanel {
         }
       });
     } else if (this._dirty) {
-      showDialog({
+      void showDialog({
         title: trans.__('Warning'),
         body: trans.__(
           'Some changes have not been saved. Continue without saving?'

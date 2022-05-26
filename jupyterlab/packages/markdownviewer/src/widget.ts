@@ -20,7 +20,6 @@ import {
 } from '@jupyterlab/translation';
 import { JSONObject, PromiseDelegate } from '@lumino/coreutils';
 import { Message } from '@lumino/messaging';
-import { ISignal, Signal } from '@lumino/signaling';
 import { StackedLayout, Widget } from '@lumino/widgets';
 
 /**
@@ -74,16 +73,9 @@ export class MarkdownViewer extends Widget {
   }
 
   /**
-   * Signal emitted when the content has been rendered.
-   */
-  get rendered(): ISignal<MarkdownViewer, void> {
-    return this._rendered;
-  }
-
-  /**
    * Set URI fragment identifier.
    */
-  setFragment(fragment: string): void {
+  setFragment(fragment: string) {
     this._fragment = fragment;
     this.update();
   }
@@ -199,8 +191,6 @@ export class MarkdownViewer extends Widget {
       // If there is an outstanding request to render, go ahead and render
       if (this._renderRequested) {
         return this._render();
-      } else {
-        this._rendered.emit();
       }
     } catch (reason) {
       // Dispose the document if rendering fails.
@@ -224,7 +214,6 @@ export class MarkdownViewer extends Widget {
   private _ready = new PromiseDelegate<void>();
   private _isRendering = false;
   private _renderRequested = false;
-  private _rendered = new Signal<MarkdownViewer, void>(this);
 }
 
 /**
@@ -273,7 +262,7 @@ export namespace MarkdownViewer {
     lineWidth: number | null;
 
     /**
-     * Whether to hide the YAML front matter.
+     * Whether to hide the YALM front matter.
      */
     hideFrontMatter: boolean;
 
@@ -329,7 +318,7 @@ export class MarkdownViewerFactory extends ABCWidgetFactory<MarkdownDocument> {
     });
     const renderer = rendermime.createRenderer(MIMETYPE);
     const content = new MarkdownViewer({ context, renderer });
-    content.title.icon = this._fileType?.icon;
+    content.title.icon = this._fileType?.icon!;
     content.title.iconClass = this._fileType?.iconClass ?? '';
     content.title.iconLabel = this._fileType?.iconLabel ?? '';
     const widget = new MarkdownDocument({ content, context });
@@ -378,7 +367,7 @@ namespace Private {
   }
 
   /**
-   * Remove YAML front matter from source.
+   * Remove YALM front matter from source.
    */
   export function removeFrontMatter(source: string): string {
     const re = /^---\n[^]*?\n(---|...)\n/;

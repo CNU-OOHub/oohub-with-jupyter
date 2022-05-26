@@ -16,16 +16,10 @@
       "path": "../codeeditor"
     },
     {
-      "path": "../codemirror"
-    },
-    {
       "path": "../coreutils"
     },
     {
       "path": "../docregistry"
-    },
-    {
-      "path": "../documentsearch"
     },
     {
       "path": "../nbformat"
@@ -47,9 +41,6 @@
     },
     {
       "path": "../statusbar"
-    },
-    {
-      "path": "../toc"
     },
     {
       "path": "../translation"

@@ -1,11 +1,11 @@
 .. _overview:
 
-Get Started
-===========
+Overview
+========
 
 JupyterLab is a next-generation web-based user interface for Project Jupyter.
 
-.. image:: ../images/interface-jupyterlab.png
+.. image:: ../user/images/interface_jupyterlab.png
    :align: center
    :class: jp-screenshot
 
@@ -54,15 +54,6 @@ JupyterLab is served from the same `server
 <https://jupyter-notebook.readthedocs.io/en/stable/>`__ and uses the same
 `notebook document format <https://nbformat.readthedocs.io/en/latest/>`__ as the
 classic Jupyter Notebook.
-
-.. toctree::
-   :maxdepth: 2
-
-   installation
-   starting
-   issue
-   faq
-   changelog
 
 .. _releases:
 

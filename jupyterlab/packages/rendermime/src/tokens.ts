@@ -9,6 +9,7 @@ import { ITranslator } from '@jupyterlab/translation';
 import { ReadonlyPartialJSONObject, Token } from '@lumino/coreutils';
 import { MimeModel } from './mimemodel';
 
+/* tslint:disable */
 /**
  * The rendermime token.
  */
@@ -36,11 +37,6 @@ export interface IRenderMimeRegistry {
    * The LaTeX typesetter for the rendermime.
    */
   readonly latexTypesetter: IRenderMime.ILatexTypesetter | null;
-
-  /**
-   * The Markdown parser for the rendermime.
-   */
-  readonly markdownParser: IRenderMime.IMarkdownParser | null;
 
   /**
    * The ordered list of mimeTypes.
@@ -174,17 +170,15 @@ export namespace IRenderMimeRegistry {
     latexTypesetter?: IRenderMime.ILatexTypesetter;
 
     /**
-     * The new Markdown parser.
-     */
-    markdownParser?: IRenderMime.IMarkdownParser;
-
-    /**
      * The application language translator.
      */
     translator?: ITranslator;
   }
 }
 
+/* tslint:enable */
+
+/* tslint:disable */
 /**
  * The latex typesetter token.
  */
@@ -193,12 +187,4 @@ export const ILatexTypesetter = new Token<IRenderMime.ILatexTypesetter>(
 );
 
 export interface ILatexTypesetter extends IRenderMime.ILatexTypesetter {}
-
-/**
- * The markdown parser token.
- */
-export const IMarkdownParser = new Token<IRenderMime.IMarkdownParser>(
-  '@jupyterlab/rendermime:IMarkdownParser'
-);
-
-export interface IMarkdownParser extends IRenderMime.IMarkdownParser {}
+/* tslint:enable */

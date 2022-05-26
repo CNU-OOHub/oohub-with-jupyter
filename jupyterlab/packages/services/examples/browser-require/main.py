@@ -2,16 +2,18 @@
 Copyright (c) Jupyter Development Team.
 Distributed under the terms of the Modified BSD License.
 """
+import json
 import os
 import os.path as osp
 
-from jupyter_server.base.handlers import JupyterHandler
+from jupyter_server.base.handlers import FileFindHandler, JupyterHandler
 from jupyter_server.extension.handler import (
     ExtensionHandlerJinjaMixin,
     ExtensionHandlerMixin,
 )
 from jupyter_server.utils import url_path_join as ujoin
-from jupyterlab_server import LabServerApp
+from jupyterlab_server import LabConfig, LabServerApp
+from traitlets import Unicode
 
 HERE = osp.dirname(__file__)
 

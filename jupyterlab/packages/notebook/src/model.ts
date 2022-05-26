@@ -33,6 +33,8 @@ import { JSONObject, ReadonlyPartialJSONValue, UUID } from '@lumino/coreutils';
 import { ISignal, Signal } from '@lumino/signaling';
 import { CellList } from './celllist';
 
+const UNSHARED_KEYS = ['kernelspec', 'language_info'];
+
 /**
  * The definition of a model object for a notebook widget.
  */
@@ -112,6 +114,7 @@ export class NotebookModel implements INotebookModel {
     metadata.changed.connect(this._onMetadataChanged, this);
     this._deletedCells = [];
 
+    (this.sharedModel as models.YNotebook).dirty = false;
     this.sharedModel.changed.connect(this._onStateChanged, this);
   }
   /**
@@ -132,19 +135,13 @@ export class NotebookModel implements INotebookModel {
    * The dirty state of the document.
    */
   get dirty(): boolean {
-    return this._dirty;
+    return this.sharedModel.dirty;
   }
   set dirty(newValue: boolean) {
-    const oldValue = this._dirty;
-    if (newValue === oldValue) {
+    if (newValue === this.dirty) {
       return;
     }
-    this._dirty = newValue;
-    this.triggerStateChange({
-      name: 'dirty',
-      oldValue,
-      newValue
-    });
+    (this.sharedModel as models.YNotebook).dirty = newValue;
   }
 
   /**
@@ -424,21 +421,16 @@ close the notebook without saving it.`,
   ): void {
     if (changes.stateChange) {
       changes.stateChange.forEach(value => {
-        if (value.name !== 'dirty' || this._dirty !== value.newValue) {
-          this._dirty = value.newValue;
+        if (value.name === 'nbformat') {
+          this._nbformat = value.newValue;
+        }
+        if (value.name === 'nbformatMinor') {
+          this._nbformatMinor = value.newValue;
+        }
+        if (value.name !== 'dirty' || value.oldValue !== value.newValue) {
           this.triggerStateChange(value);
         }
       });
-    }
-
-    if (changes.nbformatChanged) {
-      const change = changes.nbformatChanged;
-      if (change.key === 'nbformat' && change.newValue !== undefined) {
-        this._nbformat = change.newValue;
-      }
-      if (change.key === 'nbformat_minor' && change.newValue !== undefined) {
-        this._nbformatMinor = change.newValue;
-      }
     }
 
     if (changes.metadataChange) {
@@ -455,9 +447,11 @@ close the notebook without saving it.`,
     metadata: IObservableJSON,
     change: IObservableMap.IChangedArgs<ReadonlyPartialJSONValue | undefined>
   ): void {
-    this._modelDBMutex(() => {
-      this.sharedModel.updateMetadata(metadata.toJSON());
-    });
+    if (!UNSHARED_KEYS.includes(change.key)) {
+      this._modelDBMutex(() => {
+        this.sharedModel.updateMetadata(metadata.toJSON());
+      });
+    }
     this.triggerContentChange();
   }
 
@@ -517,7 +511,6 @@ close the notebook without saving it.`,
    */
   readonly modelDB: IModelDB;
 
-  private _dirty = false;
   private _readOnly = false;
   private _contentChanged = new Signal<this, void>(this);
   private _stateChanged = new Signal<this, IChangedArgs<any>>(this);

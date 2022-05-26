@@ -11,9 +11,7 @@ import { PYTHON_SPEC } from '../utils';
 describe('kernelspec/validate', () => {
   describe('#validateSpecModel', () => {
     it('should pass with valid data', () => {
-      expect(() => {
-        validateSpecModel(PYTHON_SPEC);
-      }).not.toThrow();
+      validateSpecModel(PYTHON_SPEC);
     });
 
     it('should fail on missing data', () => {
@@ -37,9 +35,7 @@ describe('kernelspec/validate', () => {
           python: PYTHON_SPEC
         }
       };
-      expect(() => {
-        validateSpecModels(model);
-      }).not.toThrow();
+      validateSpecModels(model);
     });
 
     it('should fail on missing data', () => {

@@ -8,9 +8,8 @@ import {
   Completer,
   CompleterModel,
   CompletionHandler,
-  ConnectorProxy
+  KernelConnector
 } from '@jupyterlab/completer';
-import { IObservableString } from '@jupyterlab/observables';
 import { createSessionContext } from '@jupyterlab/testutils';
 
 function createEditorWidget(): CodeEditorWrapper {
@@ -38,11 +37,8 @@ class TestCompleterModel extends CompleterModel {
 class TestCompletionHandler extends CompletionHandler {
   methods: string[] = [];
 
-  onTextChanged(
-    str: IObservableString,
-    changed: IObservableString.IChangedArgs
-  ): void {
-    super.onTextChanged(str, changed);
+  onTextChanged(): void {
+    super.onTextChanged();
     this.methods.push('onTextChanged');
   }
 
@@ -53,13 +49,13 @@ class TestCompletionHandler extends CompletionHandler {
 }
 
 describe('@jupyterlab/completer', () => {
-  let connector: ConnectorProxy;
+  let connector: KernelConnector;
   let sessionContext: ISessionContext;
 
   beforeAll(async () => {
     sessionContext = await createSessionContext();
     await (sessionContext as SessionContext).initialize();
-    connector = new ConnectorProxy(null as any, null as any, 0);
+    connector = new KernelConnector({ session: sessionContext.session });
   });
 
   afterAll(() => sessionContext.shutdown());
@@ -72,6 +68,18 @@ describe('@jupyterlab/completer', () => {
           completer: new Completer({ editor: null })
         });
         expect(handler).toBeInstanceOf(CompletionHandler);
+      });
+    });
+
+    describe('#connector', () => {
+      it('should be a data connector', () => {
+        const handler = new CompletionHandler({
+          connector,
+          completer: new Completer({ editor: null })
+        });
+        expect(handler.connector).toHaveProperty('fetch');
+        expect(handler.connector).toHaveProperty('remove');
+        expect(handler.connector).toHaveProperty('save');
       });
     });
 
@@ -293,6 +301,7 @@ describe('@jupyterlab/completer', () => {
           line,
           column: column + 6
         });
+        console.warn(editor.getCursorPosition());
         // Undo the completion, check its value and cursor position.
         editor.undo();
         expect(editor.model.value.text).toBe(text);
@@ -300,6 +309,7 @@ describe('@jupyterlab/completer', () => {
           line,
           column: column + 3
         });
+        console.warn(editor.getCursorPosition());
         // Redo the completion, check its value and cursor position.
         editor.redo();
         expect(editor.model.value.text).toBe(want);
@@ -307,6 +317,7 @@ describe('@jupyterlab/completer', () => {
           line,
           column: column + 6
         });
+        console.warn(editor.getCursorPosition());
       });
     });
 

@@ -30,8 +30,7 @@ const DEFAULT_CONTENT_CLASS = 'jp-Inspector-default-content';
  */
 export class InspectorPanel
   extends Panel
-  implements IInspector, Printing.IPrintable
-{
+  implements IInspector, Printing.IPrintable {
   /**
    * Construct an inspector.
    */
@@ -62,7 +61,7 @@ export class InspectorPanel
    * Print in iframe
    */
   [Printing.symbol]() {
-    return (): Promise<void> => Printing.printWidget(this);
+    return () => Printing.printWidget(this);
   }
 
   /**

@@ -12,9 +12,6 @@
       "path": "../coreutils"
     },
     {
-      "path": "../documentsearch"
-    },
-    {
       "path": "../nbformat"
     },
     {
@@ -30,13 +27,34 @@
       "path": "../translation"
     },
     {
-      "path": "../ui-components"
-    },
-    {
       "path": "."
     },
     {
       "path": "../../testutils"
+    },
+    {
+      "path": "../apputils"
+    },
+    {
+      "path": "../codeeditor"
+    },
+    {
+      "path": "../coreutils"
+    },
+    {
+      "path": "../nbformat"
+    },
+    {
+      "path": "../observables"
+    },
+    {
+      "path": "../shared-models"
+    },
+    {
+      "path": "../statusbar"
+    },
+    {
+      "path": "../translation"
     }
   ]
 }

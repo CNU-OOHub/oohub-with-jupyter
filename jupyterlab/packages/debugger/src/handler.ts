@@ -2,20 +2,38 @@
 // Distributed under the terms of the Modified BSD License.
 
 import { JupyterFrontEnd } from '@jupyterlab/application';
-import { ISessionContext, SessionContext } from '@jupyterlab/apputils';
+
+import {
+  ISessionContext,
+  SessionContext,
+  ToolbarButton
+} from '@jupyterlab/apputils';
+
 import { ConsolePanel } from '@jupyterlab/console';
+
 import { IChangedArgs } from '@jupyterlab/coreutils';
+
 import { DocumentWidget } from '@jupyterlab/docregistry';
+
 import { FileEditor } from '@jupyterlab/fileeditor';
+
 import { NotebookPanel } from '@jupyterlab/notebook';
+
 import { Kernel, KernelMessage, Session } from '@jupyterlab/services';
+
 import { ITranslator, nullTranslator } from '@jupyterlab/translation';
-import { bugDotIcon, bugIcon, ToolbarButton } from '@jupyterlab/ui-components';
+
+import { bugDotIcon, bugIcon } from '@jupyterlab/ui-components';
+
 import { Debugger } from './debugger';
-import { ConsoleHandler } from './handlers/console';
-import { FileHandler } from './handlers/file';
-import { NotebookHandler } from './handlers/notebook';
+
 import { IDebugger } from './tokens';
+
+import { ConsoleHandler } from './handlers/console';
+
+import { FileHandler } from './handlers/file';
+
+import { NotebookHandler } from './handlers/notebook';
 
 const TOOLBAR_DEBUGGER_ITEM = 'debugger-icon';
 
@@ -187,8 +205,9 @@ export class DebuggerHandler implements DebuggerHandler.IHandler {
       void this.update(widget, connection);
     };
 
-    const contextKernelChangedHandlers =
-      this._contextKernelChangedHandlers[widget.id];
+    const contextKernelChangedHandlers = this._contextKernelChangedHandlers[
+      widget.id
+    ];
 
     if (contextKernelChangedHandlers) {
       sessionContext.kernelChanged.disconnect(contextKernelChangedHandlers);

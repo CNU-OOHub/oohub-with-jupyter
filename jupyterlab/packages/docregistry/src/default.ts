@@ -19,8 +19,7 @@ import { DocumentRegistry, IDocumentWidget } from './index';
  */
 export class DocumentModel
   extends CodeEditor.Model
-  implements DocumentRegistry.ICodeModel
-{
+  implements DocumentRegistry.ICodeModel {
   /**
    * Construct a new document model.
    */
@@ -31,6 +30,7 @@ export class DocumentModel
     this.switchSharedModel(filemodel, true);
     this.value.changed.connect(this.triggerContentChange, this);
 
+    (this.sharedModel as models.YFile).dirty = false;
     this.sharedModel.changed.connect(this._onStateChanged, this);
   }
 
@@ -52,19 +52,13 @@ export class DocumentModel
    * The dirty state of the document.
    */
   get dirty(): boolean {
-    return this._dirty;
+    return this.sharedModel.dirty;
   }
   set dirty(newValue: boolean) {
-    const oldValue = this._dirty;
-    if (newValue === oldValue) {
+    if (newValue === this.dirty) {
       return;
     }
-    this._dirty = newValue;
-    this.triggerStateChange({
-      name: 'dirty',
-      oldValue,
-      newValue
-    });
+    (this.sharedModel as models.YFile).dirty = newValue;
   }
 
   /**
@@ -164,8 +158,7 @@ export class DocumentModel
   ): void {
     if (changes.stateChange) {
       changes.stateChange.forEach(value => {
-        if (value.name !== 'dirty' || this._dirty !== value.newValue) {
-          this._dirty = value.newValue;
+        if (value.name !== 'dirty' || value.oldValue !== value.newValue) {
           this.triggerStateChange(value);
         }
       });
@@ -177,7 +170,6 @@ export class DocumentModel
    */
   readonly sharedModel: models.ISharedFile;
   private _defaultLang = '';
-  private _dirty = false;
   private _readOnly = false;
   private _contentChanged = new Signal<this, void>(this);
   private _stateChanged = new Signal<this, IChangedArgs<any>>(this);
@@ -298,15 +290,13 @@ export class Base64ModelFactory extends TextModelFactory {
 export abstract class ABCWidgetFactory<
   T extends IDocumentWidget,
   U extends DocumentRegistry.IModel = DocumentRegistry.IModel
-> implements DocumentRegistry.IWidgetFactory<T, U>
-{
+> implements DocumentRegistry.IWidgetFactory<T, U> {
   /**
    * Construct a new `ABCWidgetFactory`.
    */
   constructor(options: DocumentRegistry.IWidgetFactoryOptions<T>) {
     this._translator = options.translator || nullTranslator;
     this._name = options.name;
-    this._label = options.label || options.name;
     this._readOnly = options.readOnly === undefined ? false : options.readOnly;
     this._defaultFor = options.defaultFor ? options.defaultFor.slice() : [];
     this._defaultRendered = (options.defaultRendered || []).slice();
@@ -352,18 +342,10 @@ export abstract class ABCWidgetFactory<
   }
 
   /**
-   * A unique name identifying of the widget.
+   * The name of the widget to display in dialogs.
    */
   get name(): string {
     return this._name;
-  }
-
-  /**
-   * The label of the widget to display in dialogs.
-   * If not given, name is used instead.
-   */
-  get label(): string {
-    return this._label;
   }
 
   /**
@@ -473,7 +455,6 @@ export abstract class ABCWidgetFactory<
   private _isDisposed = false;
   private _translator: ITranslator;
   private _name: string;
-  private _label: string;
   private _readOnly: boolean;
   private _canStartKernel: boolean;
   private _shutdownOnClose: boolean;
@@ -500,8 +481,7 @@ export class DocumentWidget<
     U extends DocumentRegistry.IModel = DocumentRegistry.IModel
   >
   extends MainAreaWidget<T>
-  implements IDocumentWidget<T, U>
-{
+  implements IDocumentWidget<T, U> {
   constructor(options: DocumentWidget.IOptions<T, U>) {
     // Include the context ready promise in the widget reveal promise
     options.reveal = Promise.all([options.reveal, options.context.ready]);

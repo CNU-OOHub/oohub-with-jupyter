@@ -1,7 +1,11 @@
 // Copyright (c) Jupyter Development Team.
 // Distributed under the terms of the Modified BSD License.
 
-import { flakyIt as it, JupyterServer } from '@jupyterlab/testutils';
+import {
+  expectFailure,
+  flakyIt as it,
+  JupyterServer
+} from '@jupyterlab/testutils';
 import { toArray } from '@lumino/algorithm';
 import { UUID } from '@lumino/coreutils';
 import { Session, SessionAPI } from '../../src';
@@ -51,23 +55,27 @@ describe('session', () => {
     it('should throw an error for an invalid model', async () => {
       const data = { id: '1234', path: 'test' };
       const serverSettings = getRequestHandler(200, data);
-      await expect(SessionAPI.listRunning(serverSettings)).rejects.toThrow();
+      const list = SessionAPI.listRunning(serverSettings);
+      await expectFailure(list);
     });
 
     it('should throw an error for another invalid model', async () => {
       const data = [{ id: '1234', kernel: { id: '', name: '' }, path: '' }];
       const serverSettings = getRequestHandler(200, data);
-      await expect(SessionAPI.listRunning(serverSettings)).rejects.toThrow();
+      const list = SessionAPI.listRunning(serverSettings);
+      await expectFailure(list);
     });
 
     it('should fail for wrong response status', async () => {
       const serverSettings = getRequestHandler(201, [createSessionModel()]);
-      await expect(SessionAPI.listRunning(serverSettings)).rejects.toThrow();
+      const list = SessionAPI.listRunning(serverSettings);
+      await expectFailure(list);
     });
 
     it('should fail for error response status', async () => {
       const serverSettings = getRequestHandler(500, {});
-      await expect(SessionAPI.listRunning(serverSettings)).rejects.toThrow();
+      const list = SessionAPI.listRunning(serverSettings);
+      await expectFailure(list, '');
     });
   });
 
@@ -97,26 +105,33 @@ describe('session', () => {
     it('should fail for wrong response status', async () => {
       const sessionModel = createSessionModel();
       const serverSettings = getRequestHandler(200, sessionModel);
-      await expect(
-        SessionAPI.startSession(sessionModel as any, serverSettings)
-      ).rejects.toThrow();
+      const sessionPromise = SessionAPI.startSession(
+        sessionModel as any,
+        serverSettings
+      );
+      await expectFailure(sessionPromise);
     });
 
     it('should fail for error response status', async () => {
       const serverSettings = getRequestHandler(500, {});
       const sessionModel = createSessionModel();
-      await expect(
-        SessionAPI.startSession(sessionModel as any, serverSettings)
-      ).rejects.toThrow();
+      const sessionPromise = SessionAPI.startSession(
+        sessionModel as any,
+        serverSettings
+      );
+      await expectFailure(sessionPromise, '');
     });
 
     it('should fail for wrong response model', async () => {
       const sessionModel = createSessionModel();
       (sessionModel as any).path = 1;
       const serverSettings = getRequestHandler(201, sessionModel);
-      await expect(
-        SessionAPI.startSession(sessionModel as any, serverSettings)
-      ).rejects.toThrow(/Property 'path' is not of type 'string'/);
+      const sessionPromise = SessionAPI.startSession(
+        sessionModel as any,
+        serverSettings
+      );
+      const msg = `Property 'path' is not of type 'string'`;
+      await expectFailure(sessionPromise, msg);
     });
 
     it('should handle a deprecated response model', async () => {
@@ -143,15 +158,11 @@ describe('session', () => {
         name: UUID.uuid4(),
         type: 'test'
       });
-      await expect(
-        SessionAPI.shutdownSession(session.id)
-      ).resolves.not.toThrow();
+      await SessionAPI.shutdownSession(session.id);
     });
 
-    it('should handle a 404 status', async () => {
-      await expect(
-        SessionAPI.shutdownSession(UUID.uuid4())
-      ).resolves.not.toThrow();
+    it('should handle a 404 status', () => {
+      return SessionAPI.shutdownSession(UUID.uuid4());
     });
   });
 });

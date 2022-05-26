@@ -252,8 +252,7 @@ export namespace ConsolePanel {
    */
   export class ContentFactory
     extends CodeConsole.ContentFactory
-    implements IContentFactory
-  {
+    implements IContentFactory {
     /**
      * Create a new console panel.
      */
@@ -277,12 +276,14 @@ export namespace ConsolePanel {
    */
   export const defaultContentFactory: IContentFactory = new ContentFactory();
 
+  /* tslint:disable */
   /**
    * The console renderer token.
    */
   export const IContentFactory = new Token<IContentFactory>(
     '@jupyterlab/console:IContentFactory'
   );
+  /* tslint:enable */
 }
 
 /**
@@ -302,7 +303,7 @@ namespace Private {
     connected: Date | null,
     executed: Date | null,
     translator?: ITranslator
-  ): void {
+  ) {
     translator = translator || nullTranslator;
     const trans = translator.load('jupyterlab');
 

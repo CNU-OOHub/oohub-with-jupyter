@@ -12,16 +12,10 @@
       "path": "../codeeditor"
     },
     {
-      "path": "../codemirror"
-    },
-    {
       "path": "../coreutils"
     },
     {
       "path": "../docregistry"
-    },
-    {
-      "path": "../documentsearch"
     },
     {
       "path": "../nbformat"
@@ -45,9 +39,6 @@
       "path": "../statusbar"
     },
     {
-      "path": "../toc"
-    },
-    {
       "path": "../translation"
     },
     {
@@ -58,6 +49,48 @@
     },
     {
       "path": "../../testutils"
+    },
+    {
+      "path": "../apputils"
+    },
+    {
+      "path": "../cells"
+    },
+    {
+      "path": "../codeeditor"
+    },
+    {
+      "path": "../coreutils"
+    },
+    {
+      "path": "../docregistry"
+    },
+    {
+      "path": "../nbformat"
+    },
+    {
+      "path": "../observables"
+    },
+    {
+      "path": "../rendermime"
+    },
+    {
+      "path": "../services"
+    },
+    {
+      "path": "../settingregistry"
+    },
+    {
+      "path": "../shared-models"
+    },
+    {
+      "path": "../statusbar"
+    },
+    {
+      "path": "../translation"
+    },
+    {
+      "path": "../ui-components"
     }
   ]
 }

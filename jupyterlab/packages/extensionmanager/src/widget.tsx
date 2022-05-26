@@ -2,7 +2,12 @@
 // Distributed under the terms of the Modified BSD License.
 
 import { JupyterFrontEnd } from '@jupyterlab/application';
-import { Dialog, showDialog } from '@jupyterlab/apputils';
+import {
+  Dialog,
+  showDialog,
+  ToolbarButtonComponent,
+  VDomRenderer
+} from '@jupyterlab/apputils';
 import { ServiceManager } from '@jupyterlab/services';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import {
@@ -18,9 +23,7 @@ import {
   InputGroup,
   jupyterIcon,
   listingsInfoIcon,
-  refreshIcon,
-  ToolbarButtonComponent,
-  VDomRenderer
+  refreshIcon
 } from '@jupyterlab/ui-components';
 import { Message } from '@lumino/messaging';
 import * as React from 'react';
@@ -81,7 +84,7 @@ export class SearchBar extends React.Component<
   /**
    * Handler for search input changes.
    */
-  handleChange = (e: React.FormEvent<HTMLElement>): void => {
+  handleChange = (e: React.FormEvent<HTMLElement>) => {
     const target = e.target as HTMLInputElement;
     this.setState({
       value: target.value
@@ -247,7 +250,7 @@ function ListEntry(props: ListEntry.IProperties): React.ReactElement<any> {
               )}
               onClick={() =>
                 window.open(
-                  'https://jupyterlab.readthedocs.io/en/latest/user/extensions.html'
+                  'https://jupyterlab.readthedocs.io/en/3.4.x/user/extensions.html'
                 )
               }
             />
@@ -263,7 +266,7 @@ function ListEntry(props: ListEntry.IProperties): React.ReactElement<any> {
                 )}
                 onClick={() =>
                   window.open(
-                    'https://jupyterlab.readthedocs.io/en/latest/user/extensions.html'
+                    'https://jupyterlab.readthedocs.io/en/3.4.x/user/extensions.html'
                   )
                 }
               />
@@ -282,7 +285,42 @@ function ListEntry(props: ListEntry.IProperties): React.ReactElement<any> {
             {entry.description}
           </div>
           <div className="jp-extensionmanager-entry-buttons">
-            {entry.enabled && (
+            {!entry.installed &&
+              entry.pkg_type == 'source' &&
+              !entry.blockedExtensionsEntry &&
+              !(!entry.allowedExtensionsEntry && listMode === 'allow') &&
+              ListModel.isDisclaimed() && (
+                <Button
+                  onClick={() => props.performAction('install', entry)}
+                  minimal
+                  small
+                >
+                  {trans.__('Install')}
+                </Button>
+              )}
+            {ListModel.entryHasUpdate(entry) &&
+              entry.pkg_type == 'source' &&
+              !entry.blockedExtensionsEntry &&
+              !(!entry.allowedExtensionsEntry && listMode === 'allow') &&
+              ListModel.isDisclaimed() && (
+                <Button
+                  onClick={() => props.performAction('install', entry)}
+                  minimal
+                  small
+                >
+                  {trans.__('Update')}
+                </Button>
+              )}
+            {entry.installed && entry.pkg_type == 'source' && (
+              <Button
+                onClick={() => props.performAction('uninstall', entry)}
+                minimal
+                small
+              >
+                {trans.__('Uninstall')}
+              </Button>
+            )}
+            {entry.enabled && entry.pkg_type == 'source' && (
               <Button
                 onClick={() => props.performAction('disable', entry)}
                 minimal
@@ -291,7 +329,7 @@ function ListEntry(props: ListEntry.IProperties): React.ReactElement<any> {
                 {trans.__('Disable')}
               </Button>
             )}
-            {entry.installed && !entry.enabled && (
+            {entry.installed && entry.pkg_type == 'source' && !entry.enabled && (
               <Button
                 onClick={() => props.performAction('enable', entry)}
                 minimal
@@ -358,11 +396,11 @@ function getPrebuiltUninstallInstruction(
       </p>
       <p>
         <a
-          href="https://jupyterlab.readthedocs.io/en/latest/user/extensions.html"
+          href="https://jupyterlab.readthedocs.io/en/3.4.x/user/extensions.html"
           target="_blank"
           rel="noopener noreferrer"
         >
-          https://jupyterlab.readthedocs.io/en/latest/user/extensions.html
+          https://jupyterlab.readthedocs.io/en/3.4.x/user/extensions.html
         </a>
       </p>
     </div>
@@ -560,7 +598,7 @@ export class CollapsibleSection extends React.Component<
   /**
    * Handler for search input changes.
    */
-  handleCollapse(): void {
+  handleCollapse() {
     this.setState(
       {
         isOpen: !this.state.isOpen
@@ -573,9 +611,7 @@ export class CollapsibleSection extends React.Component<
     );
   }
 
-  UNSAFE_componentWillReceiveProps(
-    nextProps: CollapsibleSection.IProperties
-  ): void {
+  UNSAFE_componentWillReceiveProps(nextProps: CollapsibleSection.IProperties) {
     if (nextProps.forceOpen) {
       this.setState({
         isOpen: true
@@ -650,7 +686,7 @@ export class ExtensionView extends VDomRenderer<ListModel> {
   private _forceOpen: boolean;
   constructor(
     app: JupyterFrontEnd,
-    serviceManager: ServiceManager.IManager,
+    serviceManager: ServiceManager,
     settings: ISettingRegistry.ISettings,
     translator?: ITranslator
   ) {
@@ -689,7 +725,7 @@ administrator to verify the listings configuration.`)}
           </div>
           <div>
             <a
-              href="https://jupyterlab.readthedocs.io/en/latest/user/extensions.html"
+              href="https://jupyterlab.readthedocs.io/en/3.4.x/user/extensions.html"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -935,7 +971,7 @@ risks or contain malicious code that runs on your machine.`)}
    *
    * @param value The new query.
    */
-  onSearch(value: string): void {
+  onSearch(value: string) {
     this.model!.query = value;
   }
 
@@ -944,7 +980,7 @@ risks or contain malicious code that runs on your machine.`)}
    *
    * @param value The pagination page number.
    */
-  onPage(value: number): void {
+  onPage(value: number) {
     this.model!.page = value;
   }
 
@@ -954,7 +990,7 @@ risks or contain malicious code that runs on your machine.`)}
    * @param action The action to perform.
    * @param entry The entry to perform the action on.
    */
-  onAction(action: Action, entry: IEntry): Promise<void> {
+  onAction(action: Action, entry: IEntry) {
     switch (action) {
       case 'install':
         return this.model!.install(entry);

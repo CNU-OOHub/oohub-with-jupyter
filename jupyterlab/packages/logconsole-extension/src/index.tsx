@@ -12,8 +12,10 @@ import {
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
 import {
+  CommandToolbarButton,
   ICommandPalette,
   MainAreaWidget,
+  ReactWidget,
   WidgetTracker
 } from '@jupyterlab/apputils';
 import { IChangedArgs } from '@jupyterlab/coreutils';
@@ -35,10 +37,8 @@ import {
 import {
   addIcon,
   clearIcon,
-  CommandToolbarButton,
   HTMLSelect,
-  listIcon,
-  ReactWidget
+  listIcon
 } from '@jupyterlab/ui-components';
 import { UUID } from '@lumino/coreutils';
 import { DockLayout, Widget } from '@lumino/widgets';
@@ -178,8 +178,7 @@ function activateLogConsole(
 
     app.shell.add(logConsoleWidget, 'down', {
       ref: options.ref,
-      mode: options.insertMode,
-      type: 'Log Console'
+      mode: options.insertMode
     });
     void tracker.add(logConsoleWidget);
     app.shell.activateById(logConsoleWidget.id);
@@ -234,9 +233,7 @@ function activateLogConsole(
     },
     isEnabled: () => !!logConsolePanel && logConsolePanel.source !== null,
     label: args =>
-      args['level']
-        ? trans.__('Set Log Level to %1', toTitleCase(args.level as string))
-        : trans.__('Set log level to `level`.')
+      trans.__('Set Log Level to %1', toTitleCase(args.level as string))
   });
 
   if (palette) {
@@ -354,7 +351,7 @@ export class LogLevelSwitcher extends ReactWidget {
     }
   };
 
-  render(): JSX.Element {
+  render() {
     const logger = this._logConsole.logger;
     return (
       <>

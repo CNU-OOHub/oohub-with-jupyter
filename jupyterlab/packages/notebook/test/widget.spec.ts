@@ -34,7 +34,6 @@ const contentFactory = utils.createNotebookFactory();
 const editorConfig = utils.defaultEditorConfig;
 const rendermime = utils.defaultRenderMime();
 const notebookConfig = {
-  showHiddenCellsButton: true,
   scrollPastEnd: true,
   defaultCell: 'code' as nbformat.CellType,
   recordTiming: false,
@@ -1002,78 +1001,60 @@ describe('@jupyter/notebook', () => {
         const widget = createActiveWidget();
         widget.model!.fromJSON(utils.DEFAULT_CONTENT);
 
-        expect(() => {
-          permutations.forEach(p => {
-            checkSelection(widget, p[0], p[1], p[2]);
-          });
-        }).not.toThrow();
+        permutations.forEach(p => {
+          checkSelection(widget, p[0], p[1], p[2]);
+        });
       });
 
       it('should work when we only have an active cell, with no existing selection', () => {
         const widget = createActiveWidget();
         widget.model!.fromJSON(utils.DEFAULT_CONTENT);
 
-        expect(() => {
-          permutations.forEach(p => {
-            if (p[0] === p[1]) {
-              checkSelection(widget, p[0], p[1], p[2], false);
-            }
-          });
-        }).not.toThrow();
+        permutations.forEach(p => {
+          if (p[0] === p[1]) {
+            checkSelection(widget, p[0], p[1], p[2], false);
+          }
+        });
       });
 
       it('should clip when the index is greater than the last index', () => {
         const widget = createActiveWidget();
         widget.model!.fromJSON(utils.DEFAULT_CONTENT);
 
-        expect(() => {
-          permutations.forEach(p => {
-            checkSelection(widget, p[0], p[1], Number.MAX_SAFE_INTEGER);
-          });
-        }).not.toThrow();
+        permutations.forEach(p => {
+          checkSelection(widget, p[0], p[1], Number.MAX_SAFE_INTEGER);
+        });
       });
 
       it('should clip when the index is greater than the last index with no existing selection', () => {
         const widget = createActiveWidget();
         widget.model!.fromJSON(utils.DEFAULT_CONTENT);
 
-        expect(() => {
-          permutations.forEach(p => {
-            if (p[0] === p[1]) {
-              checkSelection(
-                widget,
-                p[0],
-                p[1],
-                Number.MAX_SAFE_INTEGER,
-                false
-              );
-            }
-          });
-        }).not.toThrow();
+        permutations.forEach(p => {
+          if (p[0] === p[1]) {
+            checkSelection(widget, p[0], p[1], Number.MAX_SAFE_INTEGER, false);
+          }
+        });
       });
 
       it('should clip when the index is less than 0', () => {
         const widget = createActiveWidget();
         widget.model!.fromJSON(utils.DEFAULT_CONTENT);
 
-        expect(() => {
-          permutations.forEach(p => {
-            checkSelection(widget, p[0], p[1], -10);
-          });
-        }).not.toThrow();
+        permutations.forEach(p => {
+          checkSelection(widget, p[0], p[1], -10);
+        });
       });
 
       it('should clip when the index is less than 0 with no existing selection', () => {
         const widget = createActiveWidget();
         widget.model!.fromJSON(utils.DEFAULT_CONTENT);
 
-        expect(() => {
-          permutations.forEach(p => {
-            if (p[0] === p[1]) {
-              checkSelection(widget, p[0], p[1], -10, false);
-            }
-          });
-        }).not.toThrow();
+        permutations.forEach(p => {
+          if (p[0] === p[1]) {
+            checkSelection(widget, p[0], p[1], -10, false);
+          }
+        });
       });
 
       it('handles the case of no cells', () => {

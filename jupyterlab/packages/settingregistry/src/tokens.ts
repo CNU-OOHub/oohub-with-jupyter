@@ -15,12 +15,14 @@ import { IDisposable } from '@lumino/disposable';
 import { ISignal } from '@lumino/signaling';
 import { ISchemaValidator } from './settingregistry';
 
+/* tslint:disable */
 /**
  * The setting registry token.
  */
 export const ISettingRegistry = new Token<ISettingRegistry>(
   '@jupyterlab/coreutils:ISettingRegistry'
 );
+/* tslint:enable */
 
 /**
  * The settings registry interface.
@@ -279,9 +281,6 @@ export namespace ISettingRegistry {
     disabled?: boolean;
   }
 
-  /**
-   * An interface describing a context menu item
-   */
   export interface IContextMenuItem extends IMenuItem {
     /**
      * The CSS selector for the context menu item.
@@ -527,7 +526,9 @@ export namespace ISettingRegistry {
      *
      * @returns The setting value.
      */
-    get(key: string): {
+    get(
+      key: string
+    ): {
       composite: ReadonlyPartialJSONValue | undefined;
       user: ReadonlyPartialJSONValue | undefined;
     };

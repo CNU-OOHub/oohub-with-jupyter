@@ -1,22 +1,14 @@
 // Copyright (c) Jupyter Development Team.
 // Distributed under the terms of the Modified BSD License.
 
+import { ISignal, Signal } from '@lumino/signaling';
 import { Widget } from '@lumino/widgets';
-import {
-  IHTMLSearchMatch,
-  ISearchProvider,
-  ISearchProviderRegistry
-} from '../tokens';
-import { SearchProvider } from '../searchprovider';
-import { ITranslator } from '@jupyterlab/translation';
+import { ISearchMatch, ISearchProvider } from '../interfaces';
 
 export const FOUND_CLASSES = ['cm-string', 'cm-overlay', 'cm-searching'];
 const SELECTED_CLASSES = ['CodeMirror-selectedtext'];
 
-/**
- * HTML search engine
- */
-export class HTMLSearchEngine {
+export class GenericSearchProvider implements ISearchProvider<Widget> {
   /**
    * We choose opt out as most node types should be searched (e.g. script).
    * Even nodes like <data>, could have textContent we care about.
@@ -68,213 +60,13 @@ export class HTMLSearchEngine {
   };
 
   /**
-   * Search for a `query` in a DOM tree.
+   * Get an initial query value if applicable so that it can be entered
+   * into the search box as an initial query
    *
-   * @param query Regular expression to search
-   * @param rootNode DOM root node to search in
-   * @returns The list of matches
+   * @returns Initial value used to populate the search box.
    */
-  static search(query: RegExp, rootNode: Node): Promise<IHTMLSearchMatch[]> {
-    if (!(rootNode instanceof Node)) {
-      console.warn(
-        'Unable to search with HTMLSearchEngine the provided object.',
-        rootNode
-      );
-      return Promise.resolve([]);
-    }
-
-    if (!query.global) {
-      query = new RegExp(query.source, query.flags + 'g');
-    }
-
-    const matches: IHTMLSearchMatch[] = [];
-    const walker = document.createTreeWalker(rootNode, NodeFilter.SHOW_TEXT, {
-      acceptNode: node => {
-        // Filter subtrees of UNSUPPORTED_ELEMENTS and nodes that
-        // do not contain our search text
-        let parentElement = node.parentElement!;
-        while (parentElement !== rootNode) {
-          if (parentElement.nodeName in HTMLSearchEngine.UNSUPPORTED_ELEMENTS) {
-            return NodeFilter.FILTER_REJECT;
-          }
-          parentElement = parentElement.parentElement!;
-        }
-        return query.test(node.textContent!)
-          ? NodeFilter.FILTER_ACCEPT
-          : NodeFilter.FILTER_REJECT;
-      }
-    });
-
-    let node: Node | null = null;
-    while ((node = walker.nextNode()) !== null) {
-      // Reset query index
-      query.lastIndex = 0;
-      let match: RegExpExecArray | null = null;
-      while ((match = query.exec(node.textContent!)) !== null) {
-        matches.push({
-          text: match[0],
-          position: match.index,
-          node: node as Text
-        });
-      }
-    }
-
-    return Promise.resolve(matches);
-  }
-}
-
-/**
- * Generic DOM tree search provider.
- */
-export class GenericSearchProvider extends SearchProvider<Widget> {
-  /**
-   * Report whether or not this provider has the ability to search on the given object
-   */
-  static isApplicable(domain: Widget): boolean {
-    return domain instanceof Widget;
-  }
-
-  /**
-   * Instantiate a generic search provider for the widget.
-   *
-   * #### Notes
-   * The widget provided is always checked using `isApplicable` before calling
-   * this factory.
-   *
-   * @param widget The widget to search on
-   * @param registry The search provider registry
-   * @param translator [optional] The translator object
-   *
-   * @returns The search provider on the widget
-   */
-  static createNew(
-    widget: Widget,
-    registry: ISearchProviderRegistry,
-    translator?: ITranslator
-  ): ISearchProvider {
-    return new GenericSearchProvider(widget);
-  }
-
-  /**
-   * The current index of the selected match.
-   */
-  get currentMatchIndex(): number | null {
-    return this._currentMatchIndex >= 0 ? this._currentMatchIndex : null;
-  }
-
-  /**
-   * The current match
-   */
-  get currentMatch(): IHTMLSearchMatch | null {
-    return this._matches[this._currentMatchIndex] ?? null;
-  }
-
-  /**
-   * The current matches
-   */
-  get matches(): IHTMLSearchMatch[] {
-    // Ensure that no other fn can overwrite matches index property
-    // We shallow clone each node
-    return this._matches
-      ? this._matches.map(m => Object.assign({}, m))
-      : this._matches;
-  }
-
-  /**
-   * The number of matches.
-   */
-  get matchesCount(): number | null {
-    return this._matches.length;
-  }
-
-  /**
-   * Set to true if the widget under search is read-only, false
-   * if it is editable.  Will be used to determine whether to show
-   * the replace option.
-   */
-  readonly isReadOnly = true;
-
-  /**
-   * Clear currently highlighted match.
-   */
-  clearHighlight(): Promise<void> {
-    if (this._currentMatchIndex >= 0) {
-      const hit = this._markNodes[this._currentMatchIndex];
-      hit.classList.remove(...SELECTED_CLASSES);
-    }
-    this._currentMatchIndex = -1;
-
-    return Promise.resolve();
-  }
-
-  /**
-   * Dispose of the resources held by the search provider.
-   *
-   * #### Notes
-   * If the object's `dispose` method is called more than once, all
-   * calls made after the first will be a no-op.
-   *
-   * #### Undefined Behavior
-   * It is undefined behavior to use any functionality of the object
-   * after it has been disposed unless otherwise explicitly noted.
-   */
-  dispose(): void {
-    if (this.isDisposed) {
-      return;
-    }
-
-    this.endQuery().catch(reason => {
-      console.error(`Failed to end search query.`, reason);
-    });
-    super.dispose();
-  }
-
-  /**
-   * Move the current match indicator to the next match.
-   *
-   * @param loop Whether to loop within the matches list.
-   *
-   * @returns A promise that resolves once the action has completed.
-   */
-  async highlightNext(loop?: boolean): Promise<IHTMLSearchMatch | undefined> {
-    return this._highlightNext(false, loop ?? true) ?? undefined;
-  }
-
-  /**
-   * Move the current match indicator to the previous match.
-   *
-   * @param loop Whether to loop within the matches list.
-   *
-   * @returns A promise that resolves once the action has completed.
-   */
-  async highlightPrevious(
-    loop?: boolean
-  ): Promise<IHTMLSearchMatch | undefined> {
-    return this._highlightNext(true, loop ?? true) ?? undefined;
-  }
-
-  /**
-   * Replace the currently selected match with the provided text
-   *
-   * @param newText The replacement text
-   * @param loop Whether to loop within the matches list.
-   *
-   * @returns A promise that resolves with a boolean indicating whether a replace occurred.
-   */
-  async replaceCurrentMatch(newText: string, loop?: boolean): Promise<boolean> {
-    return Promise.resolve(false);
-  }
-
-  /**
-   * Replace all matches in the notebook with the provided text
-   *
-   * @param newText The replacement text
-   *
-   * @returns A promise that resolves with a boolean indicating whether a replace occurred.
-   */
-  async replaceAllMatches(newText: string): Promise<boolean> {
-    // This is read only, but we could loosen this in theory for input boxes...
-    return Promise.resolve(false);
+  getInitialQuery(searchTarget: Widget): any {
+    return '';
   }
 
   /**
@@ -282,54 +74,137 @@ export class GenericSearchProvider extends SearchProvider<Widget> {
    * to highlight all matches and "select" whatever the first match should be.
    *
    * @param query A RegExp to be use to perform the search
-   * @param filters Filter parameters to pass to provider
+   * @param searchTarget The widget to be searched
+   * @param [filters={}] Filter parameters to pass to provider
+   *
+   * @returns A promise that resolves with a list of all matches
    */
-  async startQuery(query: RegExp | null, filters = {}): Promise<void> {
-    await this.endQuery();
+  async startQuery(
+    query: RegExp,
+    searchTarget: Widget,
+    filters = {}
+  ): Promise<ISearchMatch[]> {
+    const that = this; // eslint-disable-line
+    // No point in removing overlay in the middle of the search
+    await this.endQuery(false);
+
+    this._widget = searchTarget;
     this._query = query;
+    this._mutationObserver.disconnect();
 
-    if (query === null) {
-      return Promise.resolve();
+    const matches: IGenericSearchMatch[] = [];
+    const walker = document.createTreeWalker(
+      this._widget.node,
+      NodeFilter.SHOW_TEXT,
+      {
+        acceptNode: node => {
+          // Filter subtrees of UNSUPPORTED_ELEMENTS and nodes that
+          // do not contain our search text
+          let parentElement = node.parentElement!;
+          while (parentElement !== this._widget.node) {
+            if (
+              parentElement.nodeName in
+              GenericSearchProvider.UNSUPPORTED_ELEMENTS
+            ) {
+              return NodeFilter.FILTER_REJECT;
+            }
+            parentElement = parentElement.parentElement!;
+          }
+          return that._query.test(node.textContent!)
+            ? NodeFilter.FILTER_ACCEPT
+            : NodeFilter.FILTER_REJECT;
+        }
+      },
+      false
+    );
+    const nodes: (Node | null)[] = [];
+    const originalNodes: Node[] = [];
+    // We MUST gather nodes first, otherwise the updates below will find each result twice
+    let node = walker.nextNode();
+    while (node) {
+      nodes.push(node);
+      /* We store them here as we want to avoid saving a modified one
+       * This happens with something like this: <pre><span>Hello</span> world</pre> and looking for o
+       * The o in world is found after the o in hello which means the pre could have been modified already
+       * While there may be a better data structure to do this for performance, this was easy to reason about.
+       */
+      originalNodes.push(node.parentElement!.cloneNode(true));
+      node = walker.nextNode();
     }
+    // We'll need to copy the regexp to ensure its 'g' and that we start the index count from 0
+    const flags =
+      this._query.flags.indexOf('g') === -1 ? query.flags + 'g' : query.flags;
 
-    const matches = await HTMLSearchEngine.search(query, this.widget.node);
-
-    // Transform the DOM
-    let nodeIdx = 0;
-    while (nodeIdx < matches.length) {
-      let activeNode = matches[nodeIdx].node;
-      let parent = activeNode.parentNode!;
-
-      let subMatches = [matches[nodeIdx]];
-      while (
-        ++nodeIdx < matches.length &&
-        matches[nodeIdx].node === activeNode
-      ) {
-        subMatches.unshift(matches[nodeIdx]);
+    nodes.forEach((node, nodeIndex) => {
+      const q = new RegExp(query.source, flags);
+      const subsections = [];
+      let match = q.exec(node!.textContent!);
+      while (match) {
+        subsections.push({
+          start: match.index,
+          end: match.index + match[0].length,
+          text: match[0]
+        });
+        match = q.exec(node!.textContent!);
       }
-
-      const markedNodes = subMatches.map(match => {
+      const originalNode = originalNodes[nodeIndex];
+      const originalLength = node!.textContent!.length; // Node length will change below
+      let lastNodeAdded = null;
+      // Go backwards as index may change if we go forwards
+      const newMatches = [];
+      for (let idx = subsections.length - 1; idx >= 0; --idx) {
+        const { start, end, text } = subsections[idx];
         // TODO: support tspan for svg when svg support is added
-        const markedNode = document.createElement('mark');
-        markedNode.classList.add(...FOUND_CLASSES);
-        markedNode.textContent = match.text;
-
-        const newNode = activeNode.splitText(match.position);
-        newNode.textContent = newNode.textContent!.slice(match.text.length);
-        parent.insertBefore(markedNode, newNode);
-        return markedNode;
-      });
-
-      // Insert node in reverse order as we replace from last to first
-      // to maintain match position.
-      for (let i = markedNodes.length - 1; i >= 0; i--) {
-        this._markNodes.push(markedNodes[i]);
+        const spannedNode = document.createElement('span');
+        spannedNode.classList.add(...FOUND_CLASSES);
+        spannedNode.textContent = text;
+        // Splice the text out before we add it back in with a span
+        node!.textContent = `${node!.textContent!.slice(
+          0,
+          start
+        )}${node!.textContent!.slice(end)}`;
+        // Are we replacing somewhere in the middle?
+        if (node?.nodeType == Node.TEXT_NODE) {
+          const endText = (node as Text).splitText(start);
+          node!.parentNode!.insertBefore(spannedNode, endText);
+          // Are we replacing from the start?
+        } else if (start === 0) {
+          node!.parentNode!.prepend(spannedNode);
+          // Are we replacing at the end?
+        } else if (end === originalLength) {
+          node!.parentNode!.append(spannedNode);
+          // Are the two results are adjacent to each other?
+        } else if (lastNodeAdded && end === subsections[idx + 1].start) {
+          node!.parentNode!.insertBefore(spannedNode, lastNodeAdded);
+        }
+        lastNodeAdded = spannedNode;
+        newMatches.unshift({
+          text,
+          fragment: '',
+          line: 0,
+          column: 0,
+          index: -1, // We set this later to ensure we get order correct
+          // GenericSearchFields
+          matchesIndex: -1,
+          indexInOriginal: idx,
+          spanElement: spannedNode,
+          originalNode
+        });
       }
+      matches.push(...newMatches);
+    });
+    matches.forEach((match, idx) => {
+      // This may be changed when this is a subprovider :/
+      match.index = idx;
+      // TODO: matchesIndex is declared as readonly. Why are we setting it here?
+      (match as any).matchesIndex = idx;
+    });
+    if (!this.isSubProvider && matches.length > 0) {
+      this._currentMatch = matches[0];
     }
-
     // Watch for future changes:
     this._mutationObserver.observe(
-      this.widget.node,
+      this._widget.node,
       // https://developer.mozilla.org/en-US/docs/Web/API/MutationObserverInit
       {
         attributes: false,
@@ -340,87 +215,201 @@ export class GenericSearchProvider extends SearchProvider<Widget> {
     );
 
     this._matches = matches;
+    return this._matches;
+  }
+
+  refreshOverlay() {
+    // We don't have an overlay, we are directly changing the DOM
   }
 
   /**
-   * Clear the highlighted matches and any internal state.
+   * Clears state of a search provider to prepare for startQuery to be called
+   * in order to start a new query or refresh an existing one.
+   *
+   * @returns A promise that resolves when the search provider is ready to
+   * begin a new search.
    */
-  async endQuery(): Promise<void> {
-    this._mutationObserver.disconnect();
-    this._markNodes.forEach(el => {
-      const parent = el.parentNode!;
-      parent.replaceChild(document.createTextNode(el.textContent!), el);
-      parent.normalize();
+  async endQuery(removeOverlay = true): Promise<void> {
+    this._matches.forEach(match => {
+      // We already took care of this parent with another match
+      if (match.indexInOriginal !== 0) {
+        return;
+      }
+      match.spanElement.parentElement!.replaceWith(match.originalNode);
     });
-    this._markNodes = [];
     this._matches = [];
-    this._currentMatchIndex = -1;
+    this._currentMatch = null;
+    this._mutationObserver.disconnect();
   }
 
-  private _highlightNext(
-    reverse: boolean,
-    loop: boolean
-  ): IHTMLSearchMatch | null {
+  /**
+   * Resets UI state, removes all matches.
+   *
+   * @returns A promise that resolves when all state has been cleaned up.
+   */
+  async endSearch(): Promise<void> {
+    return this.endQuery();
+  }
+
+  /**
+   * Move the current match indicator to the next match.
+   *
+   * @returns A promise that resolves once the action has completed.
+   */
+  async highlightNext(): Promise<ISearchMatch | undefined> {
+    return this._highlightNext(false);
+  }
+
+  /**
+   * Move the current match indicator to the previous match.
+   *
+   * @returns A promise that resolves once the action has completed.
+   */
+  async highlightPrevious(): Promise<ISearchMatch | undefined> {
+    return this._highlightNext(true);
+  }
+
+  private _highlightNext(reverse: boolean): ISearchMatch | undefined {
     if (this._matches.length === 0) {
-      return null;
+      return undefined;
     }
-    if (this._currentMatchIndex === -1) {
-      this._currentMatchIndex = reverse ? this.matches.length - 1 : 0;
+    if (!this._currentMatch) {
+      this._currentMatch = reverse
+        ? this._matches[this.matches.length - 1]
+        : this._matches[0];
     } else {
-      const hit = this._markNodes[this._currentMatchIndex];
-      hit.classList.remove(...SELECTED_CLASSES);
+      this._currentMatch.spanElement.classList.remove(...SELECTED_CLASSES);
 
-      this._currentMatchIndex = reverse
-        ? this._currentMatchIndex - 1
-        : this._currentMatchIndex + 1;
-      if (
-        loop &&
-        (this._currentMatchIndex < 0 ||
-          this._currentMatchIndex >= this._matches.length)
-      ) {
-        // Cheap way to make this a circular buffer
-        this._currentMatchIndex =
-          (this._currentMatchIndex + this._matches.length) %
-          this._matches.length;
+      let nextIndex = reverse
+        ? this._currentMatch.matchesIndex - 1
+        : this._currentMatch.matchesIndex + 1;
+      // When we are a subprovider, don't loop
+      if (this.isSubProvider) {
+        if (nextIndex < 0 || nextIndex >= this._matches.length) {
+          this._currentMatch = null;
+          return undefined;
+        }
       }
+      // Cheap way to make this a circular buffer
+      nextIndex = (nextIndex + this._matches.length) % this._matches.length;
+      this._currentMatch = this._matches[nextIndex];
     }
-
-    if (
-      this._currentMatchIndex >= 0 &&
-      this._currentMatchIndex < this._matches.length
-    ) {
-      const hit = this._markNodes[this._currentMatchIndex];
-      hit.classList.add(...SELECTED_CLASSES);
+    if (this._currentMatch) {
+      this._currentMatch.spanElement.classList.add(...SELECTED_CLASSES);
       // If not in view, scroll just enough to see it
-      if (!elementInViewport(hit)) {
-        hit.scrollIntoView(reverse);
+      if (!elementInViewport(this._currentMatch.spanElement)) {
+        this._currentMatch.spanElement.scrollIntoView(reverse);
       }
-      hit.focus();
+      this._currentMatch.spanElement.focus();
+    }
+    return this._currentMatch;
+  }
 
-      return this._matches[this._currentMatchIndex];
-    } else {
-      this._currentMatchIndex = -1;
+  /**
+   * Replace the currently selected match with the provided text
+   *
+   * @returns A promise that resolves with a boolean indicating whether a replace occurred.
+   */
+  async replaceCurrentMatch(newText: string): Promise<boolean> {
+    return Promise.resolve(false);
+  }
+
+  /**
+   * Replace all matches in the notebook with the provided text
+   *
+   * @returns A promise that resolves with a boolean indicating whether a replace occurred.
+   */
+  async replaceAllMatches(newText: string): Promise<boolean> {
+    // This is read only, but we could loosen this in theory for input boxes...
+    return Promise.resolve(false);
+  }
+
+  /**
+   * Report whether or not this provider has the ability to search on the given object
+   */
+  static canSearchOn(domain: Widget) {
+    return domain instanceof Widget;
+  }
+
+  /**
+   * The same list of matches provided by the startQuery promise resolution
+   */
+  get matches(): ISearchMatch[] {
+    // Ensure that no other fn can overwrite matches index property
+    // We shallow clone each node
+    return this._matches
+      ? this._matches.map(m => Object.assign({}, m))
+      : this._matches;
+  }
+
+  /**
+   * Signal indicating that something in the search has changed, so the UI should update
+   */
+  get changed(): ISignal<this, void> {
+    return this._changed;
+  }
+
+  /**
+   * The current index of the selected match.
+   */
+  get currentMatchIndex(): number | null {
+    if (!this._currentMatch) {
       return null;
     }
+    return this._currentMatch.index;
   }
+
+  get currentMatch(): ISearchMatch | null {
+    return this._currentMatch;
+  }
+
+  /**
+   * Set to true if the widget under search is read-only, false
+   * if it is editable.  Will be used to determine whether to show
+   * the replace option.
+   */
+  readonly isReadOnly = true;
+
+  clearSelection(): void {
+    return;
+  }
+
+  /**
+   * Set whether or not this will wrap to the beginning
+   * or end of the document on invocations of highlightNext or highlightPrevious, respectively
+   */
+  isSubProvider = false;
 
   private async _onWidgetChanged(
     mutations: MutationRecord[],
     observer: MutationObserver
   ) {
-    this._currentMatchIndex = -1;
     // This is typically cheap, but we do not control the rate of change or size of the output
-    await this.startQuery(this._query);
-    this._stateChanged.emit();
+    await this.startQuery(this._query, this._widget);
+    this._changed.emit(undefined);
   }
 
-  private _query: RegExp | null;
-  private _currentMatchIndex: number;
-  private _matches: IHTMLSearchMatch[] = [];
+  private _query: RegExp;
+  private _widget: Widget;
+  private _currentMatch: IGenericSearchMatch | null;
+  private _matches: IGenericSearchMatch[] = [];
   private _mutationObserver: MutationObserver = new MutationObserver(
     this._onWidgetChanged.bind(this)
   );
-  private _markNodes = new Array<HTMLSpanElement>();
+  private _changed = new Signal<this, void>(this);
+}
+
+export interface IGenericSearchMatch extends ISearchMatch {
+  readonly originalNode: Node;
+  readonly spanElement: HTMLElement;
+  /*
+   * Index among spans within the same originalElement
+   */
+  readonly indexInOriginal: number;
+  /**
+   * Index in the matches array
+   */
+  readonly matchesIndex: number;
 }
 
 function elementInViewport(el: HTMLElement): boolean {

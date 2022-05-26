@@ -17,9 +17,7 @@ describe('session/validate', () => {
         name: '',
         type: ''
       };
-      expect(() => {
-        validateModel(model);
-      }).not.toThrow();
+      validateModel(model);
     });
 
     it('should fail on missing data', () => {
@@ -43,9 +41,7 @@ describe('session/validate', () => {
         }
       };
       updateLegacySessionModel(model);
-      expect(() => {
-        validateModel(model);
-      }).not.toThrow();
+      validateModel(model);
     });
   });
 });

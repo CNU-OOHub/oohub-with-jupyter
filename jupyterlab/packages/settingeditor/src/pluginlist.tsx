@@ -3,17 +3,14 @@
 | Distributed under the terms of the Modified BSD License.
 |----------------------------------------------------------------------------*/
 
-import { ReactWidget } from '@jupyterlab/apputils';
+import {
+  FilterBox,
+  ReactWidget,
+  updateFilterFunction
+} from '@jupyterlab/apputils';
 import { ISettingRegistry, Settings } from '@jupyterlab/settingregistry';
 import { ITranslator, nullTranslator } from '@jupyterlab/translation';
-import {
-  classes,
-  FilterBox,
-  IScore,
-  LabIcon,
-  settingsIcon,
-  updateFilterFunction
-} from '@jupyterlab/ui-components';
+import { classes, LabIcon, settingsIcon } from '@jupyterlab/ui-components';
 import { StringExt } from '@lumino/algorithm';
 import { PartialJSONObject } from '@lumino/coreutils';
 import { Message } from '@lumino/messaging';
@@ -242,7 +239,7 @@ export class PluginList extends ReactWidget {
    * @returns - String array of properties that match the search results.
    */
   getFilterString(
-    filter: (item: string) => Partial<IScore> | null,
+    filter: (item: string) => boolean,
     props: ISettingRegistry.IProperty,
     definitions?: any,
     ref?: string
@@ -320,10 +317,7 @@ export class PluginList extends ReactWidget {
    * Updates the filter when the search bar value changes.
    * @param filter Filter function passed by search bar based on search value.
    */
-  setFilter(
-    filter: (item: string) => Partial<IScore> | null,
-    query?: string
-  ): void {
+  setFilter(filter: (item: string) => boolean, query?: string): void {
     this._filter = (plugin: ISettingRegistry.IPlugin): string[] | null => {
       if (filter(plugin.schema.title ?? '')) {
         return null;

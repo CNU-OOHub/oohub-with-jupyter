@@ -10,9 +10,7 @@ import { DEFAULT_FILE } from '../utils';
 describe('validate', () => {
   describe('validateContentsModel()', () => {
     it('should pass with valid data', () => {
-      expect(() => {
-        validateContentsModel(DEFAULT_FILE);
-      }).not.toThrow();
+      validateContentsModel(DEFAULT_FILE);
     });
 
     it('should fail on missing data', () => {
@@ -30,9 +28,7 @@ describe('validate', () => {
 
   describe('validateCheckpointModel()', () => {
     it('should pass with valid data', () => {
-      expect(() => {
-        validateCheckpointModel({ id: 'foo', last_modified: 'yesterday ' });
-      }).not.toThrow();
+      validateCheckpointModel({ id: 'foo', last_modified: 'yesterday ' });
     });
 
     it('should fail on missing data', () => {

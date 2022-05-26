@@ -21,15 +21,15 @@ c.Spawner.pre_spawn_hook = pre_spawn_hook
 c.Spawner.default_url = '/lab'
 c.Spawner.notebook_dir = '/srv/jupyterhub/my-local/'
 
-service_name = 'oohub'
-service_port = 8000
+# service_name = 'oohub'
+# service_port = 8000
 
-c.JupyterHub.services = [
-    {
-        'name': service_name,
-        'url': 'http://127.0.0.1:{}'.format(service_port),
-    }
-]
+# c.JupyterHub.services = [
+#     {
+#         'name': service_name,
+#         'url': 'http://127.0.0.1:{}'.format(service_port),
+#     }
+# ]
 
 # Configuration file for jupyterhub.
 

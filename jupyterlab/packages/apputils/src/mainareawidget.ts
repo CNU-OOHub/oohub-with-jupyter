@@ -2,11 +2,12 @@
 // Distributed under the terms of the Modified BSD License.
 
 import { ITranslator, nullTranslator } from '@jupyterlab/translation';
-import { ReactiveToolbar, Spinner, Toolbar } from '@jupyterlab/ui-components';
 import { Message, MessageLoop } from '@lumino/messaging';
 import { BoxLayout, BoxPanel, Widget } from '@lumino/widgets';
 import { DOMUtils } from './domutils';
 import { Printing } from './printing';
+import { Spinner } from './spinner';
+import { ReactiveToolbar, Toolbar } from './toolbar';
 
 /**
  * A flag to indicate that event handlers are caught in the capture phase.
@@ -24,8 +25,7 @@ const USE_CAPTURE = true;
  */
 export class MainAreaWidget<T extends Widget = Widget>
   extends Widget
-  implements Printing.IPrintable
-{
+  implements Printing.IPrintable {
   /**
    * Construct a new main area widget.
    *
@@ -350,7 +350,7 @@ export namespace MainAreaWidget {
     content?: T;
 
     /**
-     * The toolbar to use for the widget. Defaults to an empty toolbar.
+     * The toolbar to use for the widget.  Defaults to an empty toolbar.
      */
     toolbar?: Toolbar;
 

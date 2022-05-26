@@ -3,7 +3,6 @@
 const data = require('./package.json');
 const webpack = require('webpack');
 const Build = require('@jupyterlab/builder').Build;
-const miniSVGDataURI = require('mini-svg-data-uri');
 
 // Generate webpack config to copy extension assets to the build directory,
 // such as setting schema files, theme assets, etc.
@@ -25,30 +24,30 @@ module.exports = [
     module: {
       rules: [
         { test: /\.css$/, use: ['style-loader', 'css-loader'] },
-        { test: /\.html$/, type: 'asset/resource' },
-        { test: /\.md$/, type: 'asset/source' },
-        { test: /\.(jpg|png|gif)$/, type: 'asset/resource' },
-        { test: /\.js.map$/, type: 'asset/resource' },
+        { test: /\.html$/, use: 'file-loader' },
+        { test: /\.md$/, use: 'raw-loader' },
+        { test: /\.(jpg|png|gif)$/, use: 'file-loader' },
+        { test: /\.js.map$/, use: 'file-loader' },
         {
           test: /\.woff2(\?v=\d+\.\d+\.\d+)?$/,
-          type: 'asset'
+          use: 'url-loader?limit=10000&mimetype=application/font-woff'
         },
         {
           test: /\.woff(\?v=\d+\.\d+\.\d+)?$/,
-          type: 'asset'
+          use: 'url-loader?limit=10000&mimetype=application/font-woff'
         },
         {
           test: /\.ttf(\?v=\d+\.\d+\.\d+)?$/,
-          type: 'asset'
+          use: 'url-loader?limit=10000&mimetype=application/octet-stream'
         },
-        { test: /\.eot(\?v=\d+\.\d+\.\d+)?$/, type: 'asset/resource' },
+        { test: /\.eot(\?v=\d+\.\d+\.\d+)?$/, use: 'file-loader' },
         {
           // In .css files, svg is loaded as a data URI.
           test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,
           issuer: /\.css$/,
-          type: 'asset/inline',
-          generator: {
-            dataUrl: content => miniSVGDataURI(content.toString())
+          use: {
+            loader: 'svg-url-loader',
+            options: { encoding: 'none', limit: 10000 }
           }
         },
         {
@@ -56,12 +55,16 @@ module.exports = [
           // must be loaded as a raw string instead of data URIs.
           test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,
           issuer: /\.js$/,
-          type: 'asset/source'
+          use: {
+            loader: 'raw-loader'
+          }
         }
       ]
     },
     plugins: [
       new webpack.DefinePlugin({
+        // Needed for Blueprint. See https://github.com/palantir/blueprint/issues/4393
+        'process.env': '{}',
         // Needed for various packages using cwd(), like the path polyfill
         process: { cwd: () => '/' }
       })

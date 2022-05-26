@@ -10,7 +10,7 @@ In particular, there are many TypeScript packages and a single Python package.
 The Python package contains server-side code, and also distributes
 the bundled-and-compiled TypeScript code.
 
-See the `Contributing Guidelines <https://github.com/jupyterlab/jupyterlab/blob/master/CONTRIBUTING.md>`__
+See the `Contributing Guidelines <https://github.com/jupyterlab/jupyterlab/blob/3.4.x/CONTRIBUTING.md>`__
 for detailed developer installation instructions.
 
 Directories
@@ -83,7 +83,7 @@ Documentation: ``docs/``
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 This directory contains the Sphinx project for this documentation.
-You can install the dependencies for building the documentation using ``pip install .[docs]``,
+You can create an environment to build the documentation using ``conda create -f environment.yml``,
 and you can build the documentation by running ``make html``.
 The entry point to the built docs will then be in ``docs/build/index.html``.
 

@@ -18,13 +18,25 @@
       "path": "../observables"
     },
     {
-      "path": "../ui-components"
-    },
-    {
       "path": "."
     },
     {
       "path": "../../testutils"
+    },
+    {
+      "path": "../apputils"
+    },
+    {
+      "path": "../cells"
+    },
+    {
+      "path": "../docregistry"
+    },
+    {
+      "path": "../notebook"
+    },
+    {
+      "path": "../observables"
     }
   ]
 }

@@ -6,7 +6,7 @@ import { InputGroup } from '@jupyterlab/ui-components';
 import { JSONArray, JSONExt, JSONObject, JSONValue } from '@lumino/coreutils';
 import * as React from 'react';
 import Highlight from 'react-highlighter';
-import { JSONTree } from 'react-json-tree';
+import JSONTree from 'react-json-tree';
 
 /**
  * The properties for the JSON tree component.
@@ -37,7 +37,7 @@ export class Component extends React.Component<IProps, IState> {
 
   timer: number = 0;
 
-  handleChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
+  handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = event.target;
     this.setState({ value });
     window.clearTimeout(this.timer);
@@ -46,7 +46,7 @@ export class Component extends React.Component<IProps, IState> {
     }, 300);
   };
 
-  render(): JSX.Element {
+  render() {
     const translator = this.props.translator || nullTranslator;
     const trans = translator.load('jupyterlab');
 

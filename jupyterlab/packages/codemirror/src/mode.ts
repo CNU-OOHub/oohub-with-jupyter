@@ -117,7 +117,7 @@ export namespace Mode {
     return null;
   }
 
-  export function addSpecLoader(loader: ISpecLoader, rank: number): void {
+  export function addSpecLoader(loader: ISpecLoader, rank: number) {
     const item = { loader, rank };
     const index = ArrayExt.upperBound(specLoaders, item, Private.itemCmp);
     ArrayExt.insert(specLoaders, index, item);

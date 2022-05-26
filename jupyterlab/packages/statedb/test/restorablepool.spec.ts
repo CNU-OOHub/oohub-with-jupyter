@@ -87,21 +87,13 @@ describe('@jupyterlab/coreutils', () => {
     });
 
     describe('#currentChanged', () => {
-      let instance: ObservableDisposable;
-
-      beforeEach(() => {
-        instance = new ObservableDisposable();
-      });
-
-      afterEach(() => {
-        instance.dispose();
-      });
-
       it('should emit when the current object has been updated', async () => {
+        const instance = new ObservableDisposable();
         const promise = signalToPromise(pool.currentChanged);
         void pool.add(instance);
         pool.current = instance;
-        await expect(promise).resolves.not.toThrow();
+        await promise;
+        instance.dispose();
       });
     });
 

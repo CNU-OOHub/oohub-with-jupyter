@@ -2,12 +2,17 @@
 // Distributed under the terms of the Modified BSD License.
 
 import {
-  Toolbar as AppToolbar,
+  addToolbarButtonClass,
   Dialog,
   ISessionContext,
   ISessionContextDialogs,
+  ReactWidget,
   sessionContextDialogs,
-  showDialog
+  showDialog,
+  Toolbar,
+  ToolbarButton,
+  ToolbarButtonComponent,
+  UseSignal
 } from '@jupyterlab/apputils';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import * as nbformat from '@jupyterlab/nbformat';
@@ -18,19 +23,13 @@ import {
 } from '@jupyterlab/translation';
 import {
   addIcon,
-  addToolbarButtonClass,
   copyIcon,
   cutIcon,
   fastForwardIcon,
   HTMLSelect,
   pasteIcon,
-  ReactWidget,
   runIcon,
-  saveIcon,
-  Toolbar,
-  ToolbarButton,
-  ToolbarButtonComponent,
-  UseSignal
+  saveIcon
 } from '@jupyterlab/ui-components';
 import { Widget } from '@lumino/widgets';
 import * as React from 'react';
@@ -264,14 +263,11 @@ export namespace ToolbarItems {
       { name: 'run', widget: createRunButton(panel, translator) },
       {
         name: 'interrupt',
-        widget: AppToolbar.createInterruptButton(
-          panel.sessionContext,
-          translator
-        )
+        widget: Toolbar.createInterruptButton(panel.sessionContext, translator)
       },
       {
         name: 'restart',
-        widget: AppToolbar.createRestartButton(
+        widget: Toolbar.createRestartButton(
           panel.sessionContext,
           sessionDialogs,
           translator
@@ -285,7 +281,7 @@ export namespace ToolbarItems {
       { name: 'spacer', widget: Toolbar.createSpacerItem() },
       {
         name: 'kernelName',
-        widget: AppToolbar.createKernelNameItem(
+        widget: Toolbar.createKernelNameItem(
           panel.sessionContext,
           sessionDialogs,
           translator

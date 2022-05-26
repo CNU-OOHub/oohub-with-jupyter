@@ -16,10 +16,9 @@
 |----------------------------------------------------------------------------*/
 
 .lm-CommandPalette {
-  padding-bottom: 0;
+  padding-bottom: 0px;
   color: var(--jp-ui-font-color1);
   background: var(--jp-layout-color1);
-
   /* This is needed so that all font sizing of children done in ems is
    * relative to this base size */
   font-size: var(--jp-ui-font-size1);
@@ -77,7 +76,7 @@
 
 .lm-CommandPalette-wrapper {
   overflow: overlay;
-  padding: 0 9px;
+  padding: 0px 9px;
   background-color: var(--jp-input-active-background);
   height: 30px;
   box-shadow: inset 0 0 0 var(--jp-border-width) var(--jp-input-border-color);
@@ -94,7 +93,7 @@
   position: absolute;
   top: 4px;
   right: 4px;
-  padding: 5px 5px 1px;
+  padding: 5px 5px 1px 5px;
 }
 
 .jp-SearchIconGroup svg {
@@ -129,7 +128,7 @@
 |----------------------------------------------------------------------------*/
 
 .lm-CommandPalette-header:first-child {
-  margin-top: 0;
+  margin-top: 0px;
 }
 
 .lm-CommandPalette-header {
@@ -180,6 +179,10 @@
   fill: var(--jp-layout-color0);
 }
 
+.lm-CommandPalette-item.lm-mod-active .lm-CommandPalette-itemLabel > mark {
+  color: var(--jp-ui-inverse-font-color0);
+}
+
 .lm-CommandPalette-item.lm-mod-active:hover:not(.lm-mod-disabled) {
   color: var(--jp-ui-inverse-font-color1);
   background: var(--jp-brand-color1);
@@ -227,7 +230,7 @@
   background-color: var(--jp-layout-color1);
 }
 
-.lm-CommandPalette-content:empty::after {
+.lm-CommandPalette-content:empty:after {
   content: 'No results';
   margin: auto;
   margin-top: 20px;
@@ -242,6 +245,6 @@
   text-align: center;
   margin-top: 24px;
   line-height: 1.32;
-  padding: 0 8px;
+  padding: 0px 8px;
   color: var(--jp-content-font-color3);
 }

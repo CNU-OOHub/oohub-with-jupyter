@@ -26,7 +26,7 @@ export class AddWidget extends Widget {
   /**
    * Create input box with icon and attach to this.node.
    */
-  buildTag(): void {
+  buildTag() {
     const text = this.input || document.createElement('input');
     text.value = this._trans.__('Add Tag');
     text.contentEditable = 'true';
@@ -52,7 +52,7 @@ export class AddWidget extends Widget {
   /**
    * Handle `after-attach` messages for the widget.
    */
-  onAfterAttach(): void {
+  onAfterAttach() {
     this.node.addEventListener('mousedown', this);
     this.input.addEventListener('keydown', this);
     this.input.addEventListener('focus', this);
@@ -62,7 +62,7 @@ export class AddWidget extends Widget {
   /**
    * Handle `before-detach` messages for the widget.
    */
-  onBeforeDetach(): void {
+  onBeforeDetach() {
     this.node.removeEventListener('mousedown', this);
     this.input.removeEventListener('keydown', this);
     this.input.removeEventListener('focus', this);

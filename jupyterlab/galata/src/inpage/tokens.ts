@@ -1,10 +1,9 @@
 // Copyright (c) Bloomberg Finance LP.
 // Distributed under the terms of the Modified BSD License.
 
-import { JupyterFrontEnd } from '@jupyterlab/application';
-import type { IRouter } from '@jupyterlab/application';
-import type { IDocumentManager } from '@jupyterlab/docmanager';
-import type { ISettingRegistry } from '@jupyterlab/settingregistry';
+import { IRouter, JupyterFrontEnd } from '@jupyterlab/application';
+import { IDocumentManager } from '@jupyterlab/docmanager';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
 /**
  * Cell execution callbacks interface
@@ -35,7 +34,7 @@ export interface IWaitForSelectorOptions {
 }
 
 export const PLUGIN_ID_ROUTER = '@jupyterlab/application-extension:router';
-export const PLUGIN_ID_DOC_MANAGER = '@jupyterlab/docmanager-extension:manager';
+export const PLUGIN_ID_DOC_MANAGER = '@jupyterlab/docmanager-extension:plugin';
 export const PLUGIN_ID_SETTINGS = '@jupyterlab/apputils-extension:settings';
 
 export interface IPluginNameToInterfaceMap {

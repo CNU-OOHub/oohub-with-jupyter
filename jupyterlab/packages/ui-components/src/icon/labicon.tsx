@@ -1,7 +1,6 @@
 // Copyright (c) Jupyter Development Team.
 // Distributed under the terms of the Modified BSD License.
 
-import { IRenderMime } from '@jupyterlab/rendermime-interfaces';
 import { UUID } from '@lumino/coreutils';
 import { Signal } from '@lumino/signaling';
 import { ElementAttrs, VirtualElement, VirtualNode } from '@lumino/virtualdom';
@@ -26,7 +25,7 @@ export class LabIcon implements LabIcon.ILabIcon, VirtualElement.IRenderer {
    *
    * @returns the cleaned container
    */
-  static remove(container: HTMLElement): HTMLElement {
+  static remove(container: HTMLElement) {
     // clean up all children
     while (container.firstChild) {
       container.firstChild.remove();
@@ -104,7 +103,7 @@ export class LabIcon implements LabIcon.ILabIcon, VirtualElement.IRenderer {
     iconClass,
     fallback,
     ...props
-  }: Partial<LabIcon.IResolverProps> & LabIcon.IProps): HTMLElement {
+  }: Partial<LabIcon.IResolverProps> & LabIcon.IProps) {
     if (!Private.isResolvable(icon)) {
       if (!iconClass && fallback) {
         // if neither icon nor iconClass are defined/resolvable, use fallback
@@ -146,7 +145,7 @@ export class LabIcon implements LabIcon.ILabIcon, VirtualElement.IRenderer {
     iconClass,
     fallback,
     ...props
-  }: Partial<LabIcon.IResolverProps> & LabIcon.IReactProps): JSX.Element {
+  }: Partial<LabIcon.IResolverProps> & LabIcon.IReactProps) {
     if (!Private.isResolvable(icon)) {
       if (!iconClass && fallback) {
         // if neither icon nor iconClass are defined/resolvable, use fallback
@@ -198,7 +197,7 @@ export class LabIcon implements LabIcon.ILabIcon, VirtualElement.IRenderer {
    *
    * @param debug - optional boolean to force debug on or off
    */
-  static toggleDebug(debug?: boolean): void {
+  static toggleDebug(debug?: boolean) {
     LabIcon._debug = debug ?? !LabIcon._debug;
   }
 
@@ -266,7 +265,7 @@ export class LabIcon implements LabIcon.ILabIcon, VirtualElement.IRenderer {
    *
    * @returns a view of this LabIcon instance
    */
-  bindprops(props?: LabIcon.IProps): LabIcon {
+  bindprops(props?: LabIcon.IProps) {
     const view = Object.create(this);
     view._props = props;
     view.react = view._initReact(view.name + '_bind');
@@ -406,7 +405,7 @@ export class LabIcon implements LabIcon.ILabIcon, VirtualElement.IRenderer {
     return this._svgReactAttrs;
   }
 
-  get svgstr(): string {
+  get svgstr() {
     return this._svgstr;
   }
 
@@ -516,7 +515,7 @@ export class LabIcon implements LabIcon.ILabIcon, VirtualElement.IRenderer {
   protected _initRender({
     render,
     unrender
-  }: Partial<VirtualElement.IRenderer>): void {
+  }: Partial<VirtualElement.IRenderer>) {
     if (render) {
       this.render = render;
       if (unrender) {
@@ -623,7 +622,20 @@ export namespace LabIcon {
   /**
    * The simplest possible interface for defining a generic icon.
    */
-  export interface IIcon extends IRenderMime.LabIcon.IIcon {}
+  export interface IIcon {
+    /**
+     * The name of the icon. By convention, the icon name will be namespaced
+     * as so:
+     *
+     *     "pkg-name:icon-name"
+     */
+    readonly name: string;
+
+    /**
+     * A string containing the raw contents of an svg file.
+     */
+    svgstr: string;
+  }
 
   export interface IRendererOptions {
     attrs?: ElementAttrs;
@@ -690,7 +702,9 @@ export namespace LabIcon {
   /**
    * A type that can be resolved to a LabIcon instance.
    */
-  export type IResolvable = IRenderMime.LabIcon.IResolvable;
+  export type IResolvable =
+    | string
+    | (IIcon & Partial<VirtualElement.IRenderer>);
 
   /**
    * A type that maybe can be resolved to a LabIcon instance.
@@ -916,10 +930,8 @@ namespace Private {
         label = undefined;
       }
 
-      const icon = this._icon;
-
       ReactDOM.render(
-        <icon.react
+        <this._icon.react
           container={container}
           label={label}
           {...{ ...this._rendererOptions?.props, ...options?.props }}

@@ -89,8 +89,6 @@ const packages = [
   'translation',
   'ui-components-extension',
   'ui-components',
-  'user',
-  'user-extension',
   'vdom-extension',
   'vdom',
   'vega5-extension'
@@ -105,8 +103,7 @@ const entryPoints = packages
 const exclude =
   packages.flatMap(p => [`packages/${p}/test`]) +
   [
-    'packages/application-extension/src/index.tsx',
-    'examples/example.spec.ts'
+    'packages/application-extension/src/index.tsx'
     //'packages/*/test/*.spec.ts',
   ];
 
@@ -117,9 +114,8 @@ module.exports = {
   out: 'docs/api',
   // json: 'docs/api.json',
   readme: 'README.md',
-  theme: 'default',
+  theme: 'typedoc-theme',
   tsconfig: 'tsconfigdoc.json'
-  //plugin: "./typedoc-theme/lib/index.js"
 
   // theme: minimal,
   // excludePrivate: true,

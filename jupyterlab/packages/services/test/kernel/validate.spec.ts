@@ -13,9 +13,7 @@ describe('kernel/validate', () => {
         session: 'foo',
         content: { comm_id: 'foo', data: {} }
       });
-      expect(() => {
-        validateMessage(msg);
-      }).not.toThrow();
+      validateMessage(msg);
     });
 
     it('should throw if missing a field', () => {
@@ -70,9 +68,7 @@ describe('kernel/validate', () => {
         session: 'baz',
         content: { comm_id: 'foo', data: {} }
       });
-      expect(() => {
-        validateMessage(msg);
-      }).not.toThrow();
+      validateMessage(msg);
     });
 
     it('should ignore on an unknown iopub message type', () => {
@@ -82,9 +78,7 @@ describe('kernel/validate', () => {
         session: 'baz',
         content: {}
       } as any);
-      expect(() => {
-        validateMessage(msg);
-      }).not.toThrow();
+      validateMessage(msg);
     });
 
     it('should throw on missing iopub message content', () => {
@@ -125,18 +119,14 @@ describe('kernel/validate', () => {
         content: { comm_id: 'foo', data: {} }
       });
       delete msg['buffers'];
-      expect(() => {
-        validateMessage(msg);
-      }).not.toThrow();
+      validateMessage(msg);
     });
   });
 
   describe('#validateModel()', () => {
     it('should pass a valid id', () => {
       const id: Kernel.IModel = { name: 'foo', id: 'baz' };
-      expect(() => {
-        validateModel(id);
-      }).not.toThrow();
+      validateModel(id);
     });
   });
 });

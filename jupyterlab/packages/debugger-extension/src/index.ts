@@ -156,7 +156,7 @@ const files: JupyterFrontEndPlugin<void> = {
       editorTracker.currentChanged.connect((_, documentWidget) => {
         if (documentWidget) {
           void updateHandlerAndCommands(
-            documentWidget as unknown as DocumentWidget
+            (documentWidget as unknown) as DocumentWidget
           );
         }
       });
@@ -258,18 +258,16 @@ const service: JupyterFrontEndPlugin<IDebugger> = {
   autoStart: true,
   provides: IDebugger,
   requires: [IDebuggerConfig],
-  optional: [IDebuggerSources, ITranslator],
+  optional: [IDebuggerSources],
   activate: (
     app: JupyterFrontEnd,
     config: IDebugger.IConfig,
-    debuggerSources: IDebugger.ISources | null,
-    translator: ITranslator | null
+    debuggerSources: IDebugger.ISources | null
   ) =>
     new Debugger.Service({
       config,
       debuggerSources,
-      specsManager: app.serviceManager.kernelspecs,
-      translator
+      specsManager: app.serviceManager.kernelspecs
     })
 };
 
@@ -396,8 +394,7 @@ const variables: JupyterFrontEndPlugin<void> = {
         model.changed.connect(disposeWidget);
         shell.add(widget, 'main', {
           mode: tracker.currentWidget ? 'split-right' : 'split-bottom',
-          activate: false,
-          type: 'Debugger Variables'
+          activate: false
         });
       }
     });
@@ -465,7 +462,7 @@ const variables: JupyterFrontEndPlugin<void> = {
         const refreshWidget = () => {
           // Refresh the widget only if the active element is the same.
           if (handler.activeWidget === activeWidget) {
-            widget.refresh();
+            void widget.refresh();
           }
         };
         widget.disposed.connect(disposeWidget);
@@ -474,8 +471,7 @@ const variables: JupyterFrontEndPlugin<void> = {
 
         shell.add(widget, 'main', {
           mode: trackerMime.currentWidget ? 'split-right' : 'split-bottom',
-          activate: false,
-          type: 'Debugger Variables'
+          activate: false
         });
       }
     });
@@ -741,14 +737,7 @@ const main: JupyterFrontEndPlugin<void> = {
     sidebar.node.setAttribute('role', 'region');
     sidebar.node.setAttribute('aria-label', trans.__('Debugger section'));
 
-    shell.add(sidebar, 'right', { type: 'Debugger' });
-
-    commands.addCommand(CommandIDs.showPanel, {
-      label: translator.load('jupyterlab').__('Debugger Panel'),
-      execute: () => {
-        shell.activateById(sidebar.id);
-      }
-    });
+    shell.add(sidebar, 'right');
 
     if (palette) {
       const category = trans.__('Debugger');
@@ -788,8 +777,18 @@ const main: JupyterFrontEndPlugin<void> = {
             });
           });
       };
+      const onKernelSourceOpened = (
+        _: IDebugger.Model.IKernelSources | null,
+        source: IDebugger.Source,
+        breakpoint?: IDebugger.IBreakpoint
+      ): void => {
+        if (!source) {
+          return;
+        }
+        onCurrentSourceOpened(null, source, breakpoint);
+      };
 
-      const onSourceOpened = (
+      const onCurrentSourceOpened = (
         _: IDebugger.Model.ISources | null,
         source: IDebugger.Source,
         breakpoint?: IDebugger.IBreakpoint
@@ -847,19 +846,8 @@ const main: JupyterFrontEndPlugin<void> = {
         }
       };
 
-      const onKernelSourceOpened = (
-        _: IDebugger.Model.IKernelSources | null,
-        source: IDebugger.Source,
-        breakpoint?: IDebugger.IBreakpoint
-      ): void => {
-        if (!source) {
-          return;
-        }
-        onSourceOpened(null, source, breakpoint);
-      };
-
       model.callstack.currentFrameChanged.connect(onCurrentFrameChanged);
-      model.sources.currentSourceOpened.connect(onSourceOpened);
+      model.sources.currentSourceOpened.connect(onCurrentSourceOpened);
       model.kernelSources.kernelSourceOpened.connect(onKernelSourceOpened);
       model.breakpoints.clicked.connect(async (_, breakpoint) => {
         const path = breakpoint.source?.path;
@@ -867,7 +855,7 @@ const main: JupyterFrontEndPlugin<void> = {
           sourceReference: 0,
           path
         });
-        onSourceOpened(null, source, breakpoint);
+        onCurrentSourceOpened(null, source, breakpoint);
       });
     }
   }

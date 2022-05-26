@@ -1,6 +1,7 @@
 // Copyright (c) Jupyter Development Team.
 // Distributed under the terms of the Modified BSD License.
 
+import { VDomModel, VDomRenderer } from '@jupyterlab/apputils';
 import { CodeEditor } from '@jupyterlab/codeeditor';
 import {
   clickedItem,
@@ -10,7 +11,6 @@ import {
   TextItem
 } from '@jupyterlab/statusbar';
 import { ITranslator, nullTranslator } from '@jupyterlab/translation';
-import { VDomModel, VDomRenderer } from '@jupyterlab/ui-components';
 import { Menu } from '@lumino/widgets';
 import React from 'react';
 

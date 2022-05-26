@@ -91,9 +91,7 @@ describe('docregistry/context', () => {
         let checked = false;
         context.saveState.connect((sender, args) => {
           if (!called) {
-            // eslint-disable-next-line jest/no-conditional-expect
             expect(sender).toBe(context);
-            // eslint-disable-next-line jest/no-conditional-expect
             expect(args).toBe('started');
 
             checked = true;
@@ -112,9 +110,7 @@ describe('docregistry/context', () => {
         let checked = false;
         context.saveState.connect((sender, args) => {
           if (called > 0) {
-            // eslint-disable-next-line jest/no-conditional-expect
             expect(sender).toBe(context);
-            // eslint-disable-next-line jest/no-conditional-expect
             expect(args).toBe('completed');
             checked = true;
           }
@@ -138,7 +134,6 @@ describe('docregistry/context', () => {
         let checked;
         context.saveState.connect((sender, args) => {
           if (called > 0) {
-            // eslint-disable-next-line jest/no-conditional-expect
             expect(sender).toBe(context);
             checked = args;
           }
@@ -172,7 +167,7 @@ describe('docregistry/context', () => {
     describe('#ready()', () => {
       it('should resolve when the file is saved for the first time', async () => {
         await context.initialize(true);
-        await expect(context.ready).resolves.not.toThrow();
+        await context.ready;
       });
 
       it('should resolve when the file is reverted for the first time', async () => {
@@ -182,7 +177,7 @@ describe('docregistry/context', () => {
           content: 'foo'
         });
         await context.initialize(false);
-        await expect(context.ready).resolves.not.toThrow();
+        await context.ready;
       });
 
       it('should initialize the model when the file is saved for the first time', async () => {

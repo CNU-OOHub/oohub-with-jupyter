@@ -2,9 +2,9 @@
 """
 This file is meant to be used to test all of the example here and and
 in ../packages/services/examples.  We import each of the applications
-and add instrument them with a Playwright test that makes sure
+and add instrument them with a puppeteer test that makes sure
 there are no console errors or uncaught errors prior to a sentinel
-string being printed (see test/example.spec.ts for the sentinel strings
+string being printed (see chrome-example-test.js for the sentinel strings
 checked before the browser.close() call).
 """
 import argparse

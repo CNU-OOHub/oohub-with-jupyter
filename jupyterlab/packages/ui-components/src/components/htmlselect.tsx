@@ -43,7 +43,7 @@ export interface IHTMLSelectProps
 }
 
 export class HTMLSelect extends React.Component<IHTMLSelectProps> {
-  public render(): JSX.Element {
+  public render() {
     const {
       className,
       defaultStyle = true,

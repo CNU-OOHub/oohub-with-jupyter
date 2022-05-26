@@ -2,12 +2,15 @@
 | Copyright (c) Jupyter Development Team.
 | Distributed under the terms of the Modified BSD License.
 |----------------------------------------------------------------------------*/
-import { createDefaultFactory, ToolbarRegistry } from '@jupyterlab/apputils';
+import {
+  createDefaultFactory,
+  Toolbar,
+  ToolbarRegistry
+} from '@jupyterlab/apputils';
 import { Cell, ICellModel, MarkdownCell } from '@jupyterlab/cells';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { Notebook, NotebookPanel } from '@jupyterlab/notebook';
 import { IObservableList, ObservableList } from '@jupyterlab/observables';
-import { Toolbar } from '@jupyterlab/ui-components';
 import { each, toArray } from '@lumino/algorithm';
 import { CommandRegistry } from '@lumino/commands';
 import { IDisposable } from '@lumino/disposable';
@@ -41,7 +44,7 @@ export class CellToolbarTracker implements IDisposable {
     this._toolbar.changed.connect(this._onToolbarChanged, this);
 
     // Only add the toolbar to the notebook's active cell (if any) once it has fully rendered and been revealed.
-    panel.revealed.then(() => this._onActiveCellChanged(panel.content));
+    void panel.revealed.then(() => this._onActiveCellChanged(panel.content));
 
     // Handle subsequent changes of active cell.
     panel.content.activeCellChanged.connect(this._onActiveCellChanged, this);
@@ -133,8 +136,8 @@ export class CellToolbarTracker implements IDisposable {
    */
   private _onToolbarChanged(): void {
     // Reset toolbar when settings changes
-    const activeCell: Cell<ICellModel> | null | undefined =
-      this._panel?.content.activeCell;
+    const activeCell: Cell<ICellModel> | null | undefined = this._panel?.content
+      .activeCell;
     if (activeCell) {
       this._removeToolbar(activeCell.model);
       this._addToolbar(activeCell.model);
@@ -210,8 +213,7 @@ export class CellToolbarTracker implements IDisposable {
     const markdownOutputWidget = markdownOutput.renderedInput;
     const markdownOutputElement = markdownOutputWidget.node;
 
-    const firstOutputElementChild =
-      markdownOutputElement.firstElementChild as HTMLElement;
+    const firstOutputElementChild = markdownOutputElement.firstElementChild as HTMLElement;
     if (firstOutputElementChild === null) {
       return false;
     }
@@ -237,8 +239,9 @@ export class CellToolbarTracker implements IDisposable {
       return false; // Nothing in the editor
     }
 
-    const codeMirrorLines =
-      editorWidget.node.getElementsByClassName('CodeMirror-line');
+    const codeMirrorLines = editorWidget.node.getElementsByClassName(
+      'CodeMirror-line'
+    );
     if (codeMirrorLines.length < 1) {
       return false; // No lines present
     }

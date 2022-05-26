@@ -2,9 +2,9 @@ name: Check Release
 
 on:
   push:
-    branches: [master]
+    branches: [3.4.x]
   pull_request:
-    branches: [master]
+    branches: [3.4.x]
   release:
     types: [published]
 
@@ -13,7 +13,6 @@ jobs:
   check_release:
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
       matrix:
         group: [check_release, link_check]
     steps:
@@ -38,6 +37,6 @@ jobs:
         if: ${{ matrix.group == 'check_release' }}
         uses: actions/upload-artifact@v2
         with:
-          name: jupyterlab-releaser-dist-${{ github.run_number }}
+          name: dist-files
           path: |
             .jupyter_releaser_checkout/dist/*.*

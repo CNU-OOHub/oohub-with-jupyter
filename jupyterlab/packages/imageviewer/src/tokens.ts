@@ -15,9 +15,11 @@ import { ImageViewer } from './widget';
 export interface IImageTracker
   extends IWidgetTracker<IDocumentWidget<ImageViewer>> {}
 
+/* tslint:disable */
 /**
  * The image tracker token.
  */
 export const IImageTracker = new Token<IImageTracker>(
   '@jupyterlab/imageviewer:IImageTracker'
 );
+/* tslint:enable */

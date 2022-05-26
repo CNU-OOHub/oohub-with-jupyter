@@ -6,32 +6,30 @@ RUN micromamba install -qy -c conda-forge python nodejs yarn \
     && chown jovyan $HOME
 
 # Install npm packages - faster build thanks to caching
-## package_json.tar.gz contains all package.json files using
+## package_json.tar.gz contains all package.json files using 
 ## `tar cvf package_json.tar.gz package.json packages/*/package.package_json`
-## our code is `tar cvf package_json.tar.gz package.json packages/*/package.json`
-#RUN tar cvf ./jupyterlab/package_json.tar.gz ./jupyterlab/package.json  ./jupyterlab/packages/*/package.json
-ADD ./jupyterlab/package.json /tmp/jupyterlab-dev/package.json
-COPY ./jupyterlab/yarn.lock /tmp/jupyterlab-dev
+ADD ./package_json.tar.gz /tmp/jupyterlab-dev
+COPY yarn.lock /tmp/jupyterlab-dev
 
 RUN cd /tmp/jupyterlab-dev \
     && yarn install --ignore-scripts
 
 # Install python dependencies - faster build thanks to caching
-COPY ./jupyterlab/setup.cfg /tmp
+COPY setup.cfg /tmp
 
-RUN list_package=$(python -c "from configparser import ConfigParser; c = ConfigParser(); c.read('/tmp/setup.cfg'); print(' '.join(c['options']['install_requires'].strip().splitlines()))") 
-RUN micromamba install -qy -c conda-forge $list_package 
-RUN micromamba clean -ay 
-RUN rm /tmp/setup.cfg
+RUN list_package=$(python -c "from configparser import ConfigParser; c = ConfigParser(); c.read('/tmp/setup.cfg'); print(' '.join(c['options']['install_requires'].strip().splitlines()))") \
+    && micromamba install -qy -c conda-forge $list_package \
+    && micromamba clean -ay \
+    && rm /tmp/setup.cfg
 
 # Install JupyterLab
-COPY --chown=jovyan ./jupyterlab/builder/ /tmp/jupyterlab-dev/builder/
-COPY --chown=jovyan ./jupyterlab/buildutils/ /tmp/jupyterlab-dev/buildutils/
-COPY --chown=jovyan ./jupyterlab/dev_mode/ /tmp/jupyterlab-dev/dev_mode/
-COPY --chown=jovyan ./jupyterlab/jupyterlab/ /tmp/jupyterlab-dev/jupyterlab/
-COPY --chown=jovyan ./jupyterlab/packages/ /tmp/jupyterlab-dev/packages/
-COPY --chown=jovyan ./jupyterlab/scripts/ /tmp/jupyterlab-dev/scripts/
-COPY --chown=jovyan ./jupyterlab/*.* ./LICENSE /tmp/jupyterlab-dev/
+COPY --chown=jovyan ./builder/ /tmp/jupyterlab-dev/builder/
+COPY --chown=jovyan ./buildutils/ /tmp/jupyterlab-dev/buildutils/
+COPY --chown=jovyan ./dev_mode/ /tmp/jupyterlab-dev/dev_mode/
+COPY --chown=jovyan ./jupyterlab/ /tmp/jupyterlab-dev/jupyterlab/
+COPY --chown=jovyan ./packages/ /tmp/jupyterlab-dev/packages/
+COPY --chown=jovyan ./scripts/ /tmp/jupyterlab-dev/scripts/
+COPY --chown=jovyan ./*.* ./LICENSE /tmp/jupyterlab-dev/
 
 RUN pushd /tmp/jupyterlab-dev \
     && pip install -e .[ui-tests]
@@ -43,7 +41,7 @@ ENV PATH="/home/micromamba/.local/bin:$PATH"
 
 RUN mkdir -p /home/micromamba/jlab_root
 
-COPY ./jupyterlab/docker/jupyter_server_config.json /etc/jupyter/
+COPY ./docker/jupyter_server_config.json /etc/jupyter/
 
 EXPOSE 8888
 

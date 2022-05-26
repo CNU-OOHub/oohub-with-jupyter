@@ -1,18 +1,14 @@
 // Copyright (c) Jupyter Development Team.
 // Distributed under the terms of the Modified BSD License.
 
-import {
-  Button,
-  closeIcon,
-  LabIcon,
-  ReactWidget,
-  Styling
-} from '@jupyterlab/ui-components';
+import { Button, closeIcon, LabIcon } from '@jupyterlab/ui-components';
 import { ArrayExt, each, map, toArray } from '@lumino/algorithm';
 import { PromiseDelegate } from '@lumino/coreutils';
 import { Message, MessageLoop } from '@lumino/messaging';
 import { Panel, PanelLayout, Widget } from '@lumino/widgets';
 import * as React from 'react';
+import { Styling } from './styling';
+import { ReactWidget } from './vdom';
 import { WidgetTracker } from './widgettracker';
 
 /**
@@ -39,7 +35,7 @@ export function showDialog<T>(
  */
 export function showErrorMessage(
   title: string,
-  error: string | Dialog.IError,
+  error: any,
   buttons: ReadonlyArray<Dialog.IButton> = [
     Dialog.okButton({ label: 'Dismiss' })
   ]
@@ -515,16 +511,6 @@ export namespace Dialog {
      * The button display type.
      */
     displayType: 'default' | 'warn';
-  }
-
-  /**
-   * Error object interface
-   */
-  export interface IError {
-    /**
-     * Error message
-     */
-    message: string | React.ReactElement<any>;
   }
 
   /**

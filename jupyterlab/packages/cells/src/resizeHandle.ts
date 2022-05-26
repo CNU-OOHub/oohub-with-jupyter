@@ -11,6 +11,7 @@ const CELL_RESIZED_CLASS = 'jp-mod-resizedCell';
 export class ResizeHandle extends Widget {
   private _isActive: boolean = false;
   private _isDragging: boolean = false;
+  private _mouseOffset: number;
   private _protectedWidth = 10;
 
   constructor(protected targetNode: HTMLElement) {
@@ -42,13 +43,17 @@ export class ResizeHandle extends Widget {
         this.targetNode.parentNode?.childNodes.forEach(node => {
           (node as HTMLElement).classList.remove(CELL_RESIZED_CLASS);
         });
+
         document.documentElement.style.setProperty(
-          '--jp-side-by-side-output-size',
-          `1fr`
+          '--jp-side-by-side-resized-cell',
+          ''
         );
+
         this._isActive = false;
         break;
       case 'mousedown':
+        this._mouseOffset =
+          (event as MouseEvent).clientX - this.node.getBoundingClientRect().x;
         this._isDragging = true;
         if (!this._isActive) {
           this.targetNode.parentNode?.childNodes.forEach(node => {
@@ -65,17 +70,24 @@ export class ResizeHandle extends Widget {
           return;
         }
         const targetRect = this.targetNode.getBoundingClientRect();
+        const inputWidth =
+          (event as MouseEvent).clientX - targetRect.x - this._mouseOffset;
 
-        const width = targetRect.width - this._protectedWidth * 2;
-        const position =
-          (event as MouseEvent).clientX - targetRect.x - this._protectedWidth;
+        const resized_ratio =
+          1 -
+          Math.min(
+            Math.max(inputWidth, this._protectedWidth),
+            targetRect.width - this._protectedWidth
+          ) /
+            (targetRect.width - this._protectedWidth);
 
-        const outputRatio = width / position - 1;
-
-        document.documentElement.style.setProperty(
-          '--jp-side-by-side-output-size',
-          `${outputRatio}fr`
-        );
+        // Added friction to the dragging interaction
+        if (Math.round(resized_ratio * 100) % 10 == 0) {
+          document.documentElement.style.setProperty(
+            '--jp-side-by-side-resized-cell',
+            resized_ratio + 'fr'
+          );
+        }
 
         break;
       }

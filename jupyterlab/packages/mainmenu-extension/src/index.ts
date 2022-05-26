@@ -6,7 +6,6 @@
  */
 
 import {
-  createSemanticCommand,
   ILabShell,
   IRouter,
   JupyterFrontEnd,
@@ -22,9 +21,9 @@ import { PageConfig, URLExt } from '@jupyterlab/coreutils';
 import {
   IEditMenu,
   IFileMenu,
-  IHelpMenu,
   IKernelMenu,
   IMainMenu,
+  IMenuExtender,
   IRunMenu,
   ITabsMenu,
   IViewMenu,
@@ -122,8 +121,6 @@ export namespace CommandIDs {
 
   export const openHelp = 'helpmenu:open';
 
-  export const getKernel = 'helpmenu:get-kernel';
-
   export const openFirst = 'mainmenu:open-first';
 }
 
@@ -172,7 +169,6 @@ const plugin: JupyterFrontEndPlugin<IMainMenu> = {
     createKernelMenu(app, menu.kernelMenu, trans);
     createRunMenu(app, menu.runMenu, trans);
     createViewMenu(app, menu.viewMenu, trans);
-    createHelpMenu(app, menu.helpMenu, trans);
 
     // The tabs menu relies on lab shell functionality.
     if (labShell) {
@@ -264,64 +260,60 @@ export function createEditMenu(
   const commands = app.commands;
 
   // Add the undo/redo commands the the Edit menu.
-  commands.addCommand(
-    CommandIDs.undo,
-    createSemanticCommand(
-      app,
-      menu.undoers.undo,
-      {
-        label: trans.__('Undo')
-      },
-      trans
-    )
-  );
-  commands.addCommand(
-    CommandIDs.redo,
-    createSemanticCommand(
-      app,
-      menu.undoers.redo,
-      {
-        label: trans.__('Redo')
-      },
-      trans
-    )
-  );
+  commands.addCommand(CommandIDs.undo, {
+    label: trans.__('Undo'),
+    isEnabled: Private.delegateEnabled(app, menu.undoers, 'undo'),
+    execute: Private.delegateExecute(app, menu.undoers, 'undo')
+  });
+  commands.addCommand(CommandIDs.redo, {
+    label: trans.__('Redo'),
+    isEnabled: Private.delegateEnabled(app, menu.undoers, 'redo'),
+    execute: Private.delegateExecute(app, menu.undoers, 'redo')
+  });
 
   // Add the clear commands to the Edit menu.
-  commands.addCommand(
-    CommandIDs.clearCurrent,
-    createSemanticCommand(
-      app,
-      menu.clearers.clearCurrent,
-      {
-        label: trans.__('Clear')
-      },
-      trans
-    )
-  );
-  commands.addCommand(
-    CommandIDs.clearAll,
-    createSemanticCommand(
-      app,
-      menu.clearers.clearAll,
-      {
-        label: trans.__('Clear All')
-      },
-      trans
-    )
-  );
+  commands.addCommand(CommandIDs.clearCurrent, {
+    label: () => {
+      const enabled = Private.delegateEnabled(
+        app,
+        menu.clearers,
+        'clearCurrent'
+      )();
+      let localizedLabel = trans.__('Clear');
+      if (enabled) {
+        localizedLabel = Private.delegateLabel(
+          app,
+          menu.clearers,
+          'clearCurrentLabel'
+        );
+      }
+      return localizedLabel;
+    },
+    isEnabled: Private.delegateEnabled(app, menu.clearers, 'clearCurrent'),
+    execute: Private.delegateExecute(app, menu.clearers, 'clearCurrent')
+  });
+  commands.addCommand(CommandIDs.clearAll, {
+    label: () => {
+      const enabled = Private.delegateEnabled(app, menu.clearers, 'clearAll')();
+      let localizedLabel = trans.__('Clear All');
+      if (enabled) {
+        localizedLabel = Private.delegateLabel(
+          app,
+          menu.clearers,
+          'clearAllLabel'
+        );
+      }
+      return localizedLabel;
+    },
+    isEnabled: Private.delegateEnabled(app, menu.clearers, 'clearAll'),
+    execute: Private.delegateExecute(app, menu.clearers, 'clearAll')
+  });
 
-  commands.addCommand(
-    CommandIDs.goToLine,
-    createSemanticCommand(
-      app,
-      menu.goToLiners,
-      {
-        label: trans.__('Go to Line…')
-      },
-      trans
-    )
-  );
+  commands.addCommand(CommandIDs.goToLine, {
+    label: trans.__('Go to Line…'),
+    isEnabled: Private.delegateEnabled(app, menu.goToLiners, 'goToLine'),
+    execute: Private.delegateExecute(app, menu.goToLiners, 'goToLine')
+  });
 }
 
 /**
@@ -340,32 +332,51 @@ export function createFileMenu(
   // even if it cannot find a delegate for the activity.
   // In that case, we instead call the application `close` command.
   commands.addCommand(CommandIDs.closeAndCleanup, {
-    ...createSemanticCommand(
-      app,
-      menu.closeAndCleaners,
-      {
-        execute: 'application:close',
-        label: trans.__('Close and Shut Down'),
-        isEnabled: true
-      },
-      trans
-    ),
+    label: () => {
+      const localizedLabel = Private.delegateLabel(
+        app,
+        menu.closeAndCleaners,
+        'closeAndCleanupLabel'
+      );
+      return localizedLabel ? localizedLabel : trans.__('Close and Shutdown');
+    },
     isEnabled: () =>
-      !!app.shell.currentWidget && !!app.shell.currentWidget.title.closable
+      !!app.shell.currentWidget && !!app.shell.currentWidget.title.closable,
+    execute: () => {
+      // Check if we have a registered delegate. If so, call that.
+      if (
+        Private.delegateEnabled(app, menu.closeAndCleaners, 'closeAndCleanup')()
+      ) {
+        return Private.delegateExecute(
+          app,
+          menu.closeAndCleaners,
+          'closeAndCleanup'
+        )();
+      }
+      // If we have no delegate, call the top-level application close.
+      return app.commands.execute('application:close');
+    }
   });
 
   // Add a delegator command for creating a console for an activity.
-  commands.addCommand(
-    CommandIDs.createConsole,
-    createSemanticCommand(
+  commands.addCommand(CommandIDs.createConsole, {
+    label: () => {
+      const localizedLabel = Private.delegateLabel(
+        app,
+        menu.consoleCreators,
+        'createConsoleLabel'
+      );
+      return localizedLabel
+        ? localizedLabel
+        : trans.__('New Console for Activity');
+    },
+    isEnabled: Private.delegateEnabled(
       app,
       menu.consoleCreators,
-      {
-        label: trans.__('New Console for Activity')
-      },
-      trans
-    )
-  );
+      'createConsole'
+    ),
+    execute: Private.delegateExecute(app, menu.consoleCreators, 'createConsole')
+  });
 
   commands.addCommand(CommandIDs.shutdown, {
     label: trans.__('Shut Down'),
@@ -457,79 +468,75 @@ export function createKernelMenu(
   const commands = app.commands;
 
   commands.addCommand(CommandIDs.interruptKernel, {
-    ...createSemanticCommand(
+    label: trans.__('Interrupt Kernel'),
+    caption: trans.__('Interrupt the kernel'),
+    icon: args => (args.toolbar ? stopIcon : undefined),
+    isEnabled: Private.delegateEnabled(
       app,
-      menu.kernelUsers.interruptKernel,
-      {
-        label: trans.__('Interrupt Kernel'),
-        caption: trans.__('Interrupt the kernel')
-      },
-      trans
+      menu.kernelUsers,
+      'interruptKernel'
     ),
-    icon: args => (args.toolbar ? stopIcon : undefined)
+    execute: Private.delegateExecute(app, menu.kernelUsers, 'interruptKernel')
   });
 
-  commands.addCommand(
-    CommandIDs.reconnectToKernel,
-    createSemanticCommand(
+  commands.addCommand(CommandIDs.reconnectToKernel, {
+    label: trans.__('Reconnect to Kernel'),
+    isEnabled: Private.delegateEnabled(
       app,
-      menu.kernelUsers.reconnectToKernel,
-      {
-        label: trans.__('Reconnect to Kernel')
-      },
-      trans
-    )
-  );
+      menu.kernelUsers,
+      'reconnectToKernel'
+    ),
+    execute: Private.delegateExecute(app, menu.kernelUsers, 'reconnectToKernel')
+  });
 
   commands.addCommand(CommandIDs.restartKernel, {
-    ...createSemanticCommand(
-      app,
-      menu.kernelUsers.restartKernel,
-      {
-        label: trans.__('Restart Kernel…'),
-        caption: trans.__('Restart the kernel')
-      },
-      trans
-    ),
-    icon: args => (args.toolbar ? refreshIcon : undefined)
+    label: trans.__('Restart Kernel…'),
+    caption: trans.__('Restart the kernel'),
+    icon: args => (args.toolbar ? refreshIcon : undefined),
+    isEnabled: Private.delegateEnabled(app, menu.kernelUsers, 'restartKernel'),
+    execute: Private.delegateExecute(app, menu.kernelUsers, 'restartKernel')
   });
 
-  commands.addCommand(
-    CommandIDs.restartKernelAndClear,
-    createSemanticCommand(
+  commands.addCommand(CommandIDs.restartKernelAndClear, {
+    label: () => {
+      const enabled = Private.delegateEnabled(
+        app,
+        menu.kernelUsers,
+        'restartKernelAndClear'
+      )();
+      let localizedLabel = trans.__('Restart Kernel and Clear…');
+      if (enabled) {
+        localizedLabel = Private.delegateLabel(
+          app,
+          menu.kernelUsers,
+          'restartKernelAndClearLabel'
+        );
+      }
+      return localizedLabel;
+    },
+    isEnabled: Private.delegateEnabled(
       app,
-      [menu.kernelUsers.restartKernel, menu.kernelUsers.clearWidget],
-      {
-        label: trans.__('Restart Kernel and Clear…')
-      },
-      trans
+      menu.kernelUsers,
+      'restartKernelAndClear'
+    ),
+    execute: Private.delegateExecute(
+      app,
+      menu.kernelUsers,
+      'restartKernelAndClear'
     )
-  );
+  });
 
-  commands.addCommand(
-    CommandIDs.changeKernel,
-    createSemanticCommand(
-      app,
-      menu.kernelUsers.changeKernel,
-      {
-        label: trans.__('Change Kernel…')
-      },
-      trans
-    )
-  );
+  commands.addCommand(CommandIDs.changeKernel, {
+    label: trans.__('Change Kernel…'),
+    isEnabled: Private.delegateEnabled(app, menu.kernelUsers, 'changeKernel'),
+    execute: Private.delegateExecute(app, menu.kernelUsers, 'changeKernel')
+  });
 
-  commands.addCommand(
-    CommandIDs.shutdownKernel,
-    createSemanticCommand(
-      app,
-      menu.kernelUsers.shutdownKernel,
-      {
-        label: trans.__('Shut Down Kernel'),
-        caption: trans.__('Shut down kernel')
-      },
-      trans
-    )
-  );
+  commands.addCommand(CommandIDs.shutdownKernel, {
+    label: trans.__('Shut Down Kernel'),
+    isEnabled: Private.delegateEnabled(app, menu.kernelUsers, 'shutdownKernel'),
+    execute: Private.delegateExecute(app, menu.kernelUsers, 'shutdownKernel')
+  });
 
   commands.addCommand(CommandIDs.shutdownAllKernels, {
     label: trans.__('Shut Down All Kernels…'),
@@ -563,41 +570,58 @@ export function createViewMenu(
 ): void {
   const commands = app.commands;
 
-  commands.addCommand(
-    CommandIDs.lineNumbering,
-    createSemanticCommand(
+  commands.addCommand(CommandIDs.lineNumbering, {
+    label: trans.__('Show Line Numbers'),
+    isEnabled: Private.delegateEnabled(
       app,
-      menu.editorViewers.toggleLineNumbers,
-      {
-        label: trans.__('Show Line Numbers')
-      },
-      trans
+      menu.editorViewers,
+      'toggleLineNumbers'
+    ),
+    isToggled: Private.delegateToggled(
+      app,
+      menu.editorViewers,
+      'lineNumbersToggled'
+    ),
+    execute: Private.delegateExecute(
+      app,
+      menu.editorViewers,
+      'toggleLineNumbers'
     )
-  );
+  });
 
-  commands.addCommand(
-    CommandIDs.matchBrackets,
-    createSemanticCommand(
+  commands.addCommand(CommandIDs.matchBrackets, {
+    label: trans.__('Match Brackets'),
+    isEnabled: Private.delegateEnabled(
       app,
-      menu.editorViewers.toggleMatchBrackets,
-      {
-        label: trans.__('Match Brackets')
-      },
-      trans
+      menu.editorViewers,
+      'toggleMatchBrackets'
+    ),
+    isToggled: Private.delegateToggled(
+      app,
+      menu.editorViewers,
+      'matchBracketsToggled'
+    ),
+    execute: Private.delegateExecute(
+      app,
+      menu.editorViewers,
+      'toggleMatchBrackets'
     )
-  );
+  });
 
-  commands.addCommand(
-    CommandIDs.wordWrap,
-    createSemanticCommand(
+  commands.addCommand(CommandIDs.wordWrap, {
+    label: trans.__('Wrap Words'),
+    isEnabled: Private.delegateEnabled(
       app,
-      menu.editorViewers.toggleWordWrap,
-      {
-        label: trans.__('Wrap Words')
-      },
-      trans
-    )
-  );
+      menu.editorViewers,
+      'toggleWordWrap'
+    ),
+    isToggled: Private.delegateToggled(
+      app,
+      menu.editorViewers,
+      'wordWrapToggled'
+    ),
+    execute: Private.delegateExecute(app, menu.editorViewers, 'toggleWordWrap')
+  });
 }
 
 /**
@@ -611,42 +635,105 @@ export function createRunMenu(
   const commands = app.commands;
 
   commands.addCommand(CommandIDs.run, {
-    ...createSemanticCommand(
-      app,
-      menu.codeRunners.run,
-      {
-        label: trans.__('Run Selected'),
-        caption: trans.__('Run Selected')
-      },
-      trans
-    ),
-    icon: args => (args.toolbar ? runIcon : undefined)
+    label: () => {
+      const localizedLabel = Private.delegateLabel(
+        app,
+        menu.codeRunners,
+        'runLabel'
+      );
+      const enabled = Private.delegateEnabled(app, menu.codeRunners, 'run')();
+      return enabled ? localizedLabel : trans.__('Run Selected');
+    },
+    caption: () => {
+      const localizedCaption = Private.delegateLabel(
+        app,
+        menu.codeRunners,
+        'runCaption'
+      );
+      const enabled = Private.delegateEnabled(app, menu.codeRunners, 'run')();
+      return enabled ? localizedCaption : trans.__('Run Selected');
+    },
+    icon: args => (args.toolbar ? runIcon : undefined),
+    isEnabled: Private.delegateEnabled(app, menu.codeRunners, 'run'),
+    execute: Private.delegateExecute(app, menu.codeRunners, 'run')
   });
 
-  commands.addCommand(
-    CommandIDs.runAll,
-    createSemanticCommand(
-      app,
-      menu.codeRunners.runAll,
-      {
-        label: trans.__('Run All'),
-        caption: trans.__('Run All')
-      },
-      trans
-    )
-  );
-
+  commands.addCommand(CommandIDs.runAll, {
+    label: () => {
+      let localizedLabel = trans.__('Run All');
+      const enabled = Private.delegateEnabled(
+        app,
+        menu.codeRunners,
+        'runAll'
+      )();
+      if (enabled) {
+        localizedLabel = Private.delegateLabel(
+          app,
+          menu.codeRunners,
+          'runAllLabel'
+        );
+      }
+      return localizedLabel;
+    },
+    caption: () => {
+      let localizedCaption = trans.__('Run All');
+      const enabled = Private.delegateEnabled(
+        app,
+        menu.codeRunners,
+        'runAll'
+      )();
+      if (enabled) {
+        localizedCaption = Private.delegateLabel(
+          app,
+          menu.codeRunners,
+          'runAllCaption'
+        );
+      }
+      return localizedCaption;
+    },
+    isEnabled: Private.delegateEnabled(app, menu.codeRunners, 'runAll'),
+    execute: Private.delegateExecute(app, menu.codeRunners, 'runAll')
+  });
   commands.addCommand(CommandIDs.restartAndRunAll, {
-    ...createSemanticCommand(
+    label: () => {
+      let localizedLabel = trans.__('Restart Kernel and Run All');
+      const enabled = Private.delegateEnabled(
+        app,
+        menu.codeRunners,
+        'restartAndRunAll'
+      )();
+      if (enabled) {
+        localizedLabel = Private.delegateLabel(
+          app,
+          menu.codeRunners,
+          'restartAndRunAllLabel'
+        );
+      }
+      return localizedLabel;
+    },
+    caption: () => {
+      let localizedCaption = trans.__('Restart Kernel and Run All');
+      const enabled = Private.delegateEnabled(
+        app,
+        menu.codeRunners,
+        'restartAndRunAll'
+      )();
+      if (enabled) {
+        localizedCaption = Private.delegateLabel(
+          app,
+          menu.codeRunners,
+          'restartAndRunAllLabel'
+        );
+      }
+      return localizedCaption;
+    },
+    icon: args => (args.toolbar ? fastForwardIcon : undefined),
+    isEnabled: Private.delegateEnabled(
       app,
-      [menu.codeRunners.restart, menu.codeRunners.runAll],
-      {
-        label: trans.__('Restart Kernel and Run All'),
-        caption: trans.__('Restart Kernel and Run All')
-      },
-      trans
+      menu.codeRunners,
+      'restartAndRunAll'
     ),
-    icon: args => (args.toolbar ? fastForwardIcon : undefined)
+    execute: Private.delegateExecute(app, menu.codeRunners, 'restartAndRunAll')
   });
 }
 
@@ -669,9 +756,6 @@ export function createTabsMenu(
   // Command to activate a widget by id.
   commands.addCommand(CommandIDs.activateById, {
     label: args => {
-      if (args.id === undefined) {
-        return trans.__('Activate a widget by its `id`.');
-      }
       const id = args['id'] || '';
       const widget = find(app.shell.widgets('main'), w => w.id === id);
       return (widget && widget.title.label) || '';
@@ -733,34 +817,126 @@ export function createTabsMenu(
   }
 }
 
-/**
- * Create the basic `Help` menu.
- */
-export function createHelpMenu(
-  app: JupyterFrontEnd,
-  menu: IHelpMenu,
-  trans: TranslationBundle
-): void {
-  app.commands.addCommand(
-    CommandIDs.getKernel,
-    createSemanticCommand(
-      app,
-      menu.getKernel,
-      {
-        label: trans.__('Get Kernel'),
-        isVisible: false
-      },
-      trans
-    )
-  );
-}
-
 export default plugin;
 
 /**
  * A namespace for Private data.
  */
 namespace Private {
+  /**
+   * Return the first value of the iterable that satisfies the predicate
+   * function.
+   */
+  function find<T>(
+    it: Iterable<T>,
+    predicate: (value: T) => boolean
+  ): T | undefined {
+    for (const value of it) {
+      if (predicate(value)) {
+        return value;
+      }
+    }
+    return undefined;
+  }
+
+  /**
+   * A utility function that delegates a portion of a label to an IMenuExtender.
+   */
+  export function delegateLabel<E extends IMenuExtender<Widget>>(
+    app: JupyterFrontEnd,
+    s: Set<E>,
+    label: keyof E
+  ): string {
+    const widget = app.shell.currentWidget;
+    const extender = widget
+      ? find(s, value => value.tracker.has(widget!))
+      : undefined;
+
+    if (!extender || !extender[label]) {
+      return '';
+    } else {
+      const count: number = extender.tracker.size;
+
+      // Coerce the result to be a string. When Typedoc is updated to use
+      // Typescript 2.8, we can possibly use conditional types to get Typescript
+      // to recognize this is a string.
+      return (extender[label] as any)(count) as string;
+    }
+  }
+
+  /**
+   * A utility function that delegates command execution
+   * to an IMenuExtender.
+   */
+  export function delegateExecute<E extends IMenuExtender<Widget>>(
+    app: JupyterFrontEnd,
+    s: Set<E>,
+    executor: keyof E
+  ): () => Promise<any> {
+    return () => {
+      const widget = app.shell.currentWidget;
+      const extender = widget
+        ? find(s, value => value.tracker.has(widget!))
+        : undefined;
+      if (!extender) {
+        return Promise.resolve(void 0);
+      }
+      // Coerce the result to be a function. When Typedoc is updated to use
+      // Typescript 2.8, we can possibly use conditional types to get Typescript
+      // to recognize this is a function.
+      const f = (extender[executor] as any) as (w: Widget) => Promise<any>;
+      return f(widget!);
+    };
+  }
+
+  /**
+   * A utility function that delegates whether a command is enabled
+   * to an IMenuExtender.
+   */
+  export function delegateEnabled<E extends IMenuExtender<Widget>>(
+    app: JupyterFrontEnd,
+    s: Set<E>,
+    executor: keyof E
+  ): () => boolean {
+    return () => {
+      const widget = app.shell.currentWidget;
+      const extender = widget
+        ? find(s, value => value.tracker.has(widget!))
+        : undefined;
+      return (
+        !!extender &&
+        !!extender[executor] &&
+        (extender.isEnabled && widget ? extender.isEnabled(widget) : true)
+      );
+    };
+  }
+
+  /**
+   * A utility function that delegates whether a command is toggled
+   * for an IMenuExtender.
+   */
+  export function delegateToggled<E extends IMenuExtender<Widget>>(
+    app: JupyterFrontEnd,
+    s: Set<E>,
+    toggled: keyof E
+  ): () => boolean {
+    return () => {
+      const widget = app.shell.currentWidget;
+      const extender = widget
+        ? find(s, value => value.tracker.has(widget!))
+        : undefined;
+      // Coerce extender[toggled] to be a function. When Typedoc is updated to use
+      // Typescript 2.8, we can possibly use conditional types to get Typescript
+      // to recognize this is a function.
+      return (
+        !!extender &&
+        !!extender[toggled] &&
+        !!widget &&
+        !!((extender[toggled] as any) as (w: Widget) => () => boolean)(widget)
+      );
+    };
+  }
+
   async function displayInformation(trans: TranslationBundle): Promise<void> {
     const result = await showDialog({
       title: trans.__('Information'),
@@ -785,7 +961,7 @@ namespace Private {
     translator: ITranslator
   ): Promise<void> {
     const trans = translator.load('jupyterlab');
-    let canonical: ISettingRegistry.ISchema | null = null;
+    let canonical: ISettingRegistry.ISchema | null;
     let loaded: { [name: string]: ISettingRegistry.IMenu[] } = {};
 
     /**
@@ -863,6 +1039,8 @@ namespace Private {
 
     // Repopulate the canonical variable after the setting registry has
     // preloaded all initial plugins.
+    canonical = null;
+
     const settings = await registry.load(PLUGIN_ID);
 
     const currentMenus: ISettingRegistry.IMenu[] =

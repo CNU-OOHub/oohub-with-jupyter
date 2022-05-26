@@ -81,7 +81,7 @@ export class MimeContent extends Widget {
   /**
    * Print method. Deferred to the renderer.
    */
-  [Printing.symbol](): Printing.OptionalAsyncThunk {
+  [Printing.symbol]() {
     return Printing.getPrintFunction(this.renderer);
   }
 
@@ -95,7 +95,7 @@ export class MimeContent extends Widget {
   /**
    * Set URI fragment identifier.
    */
-  setFragment(fragment: string): void {
+  setFragment(fragment: string) {
     this._fragment = fragment;
     this.update();
   }
@@ -296,8 +296,7 @@ export class MimeDocumentFactory extends ABCWidgetFactory<MimeDocument> {
         resolver: rendermime.resolver,
         sanitizer: rendermime.sanitizer,
         linkHandler: rendermime.linkHandler,
-        latexTypesetter: rendermime.latexTypesetter,
-        markdownParser: rendermime.markdownParser
+        latexTypesetter: rendermime.latexTypesetter
       });
     } else {
       renderer = rendermime.createRenderer(mimeType);
@@ -311,7 +310,7 @@ export class MimeDocumentFactory extends ABCWidgetFactory<MimeDocument> {
       dataType: this._dataType
     });
 
-    content.title.icon = ft?.icon;
+    content.title.icon = ft?.icon!;
     content.title.iconClass = ft?.iconClass ?? '';
     content.title.iconLabel = ft?.iconLabel ?? '';
 

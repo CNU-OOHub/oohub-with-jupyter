@@ -3,7 +3,6 @@
 | Distributed under the terms of the Modified BSD License.
 |----------------------------------------------------------------------------*/
 
-import type { IRenderMime } from '@jupyterlab/rendermime-interfaces';
 import { ServerConnection } from '@jupyterlab/services';
 import { DataConnector, IDataConnector } from '@jupyterlab/statedb';
 import { Token } from '@lumino/coreutils';
@@ -23,8 +22,7 @@ export const ITranslatorConnector = new Token<ITranslatorConnector>(
 
 export class TranslatorConnector
   extends DataConnector<Language, Language, { language: string }>
-  implements ITranslatorConnector
-{
+  implements ITranslatorConnector {
   constructor(
     translationsUrl: string = '',
     serverSettings?: ServerConnection.ISettings
@@ -48,14 +46,83 @@ export class TranslatorConnector
 }
 
 /**
- * Bundle of gettext-based translation functions for a specific domain.
+ * Bundle of gettext-based translation functions.
+ *
+ * The calls to the functions in this bundle will be automatically
+ * extracted by `jupyterlab-translate` package to generate translation
+ * template files if the bundle is assigned to:
+ * - variable named `trans`,
+ * - public attribute named `trans` (`this.trans`),
+ * - private attribute named `trans` (`this._trans`),
+ * - `trans` attribute `props` variable (`props.trans`),
+ * - `trans` attribute `props` attribute (`this.props.trans`)
  */
-export type TranslationBundle = IRenderMime.TranslationBundle;
+export type TranslationBundle = {
+  /**
+   * Alias for `gettext` (translate strings without number inflection)
+   * @param msgid message (text to translate)
+   * @param args
+   */
+  __(msgid: string, ...args: any[]): string;
+  /**
+   * Alias for `ngettext` (translate accounting for plural forms)
+   * @param msgid message for singular
+   * @param msgid_plural message for plural
+   * @param n determines which plural form to use
+   * @param args
+   */
+  _n(msgid: string, msgid_plural: string, n: number, ...args: any[]): string;
+  /**
+   * Alias for `pgettext` (translate in given context)
+   * @param msgctxt context
+   * @param msgid message (text to translate)
+   * @param args
+   */
+  _p(msgctxt: string, msgid: string, ...args: any[]): string;
+  /**
+   * Alias for `npgettext` (translate accounting for plural forms in given context)
+   * @param msgctxt context
+   * @param msgid message for singular
+   * @param msgid_plural message for plural
+   * @param n number used to determine which plural form to use
+   * @param args
+   */
+  _np(
+    msgctxt: string,
+    msgid: string,
+    msgid_plural: string,
+    n: number,
+    ...args: any[]
+  ): string;
+  gettext(msgid: string, ...args: any[]): string;
+  ngettext(
+    msgid: string,
+    msgid_plural: string,
+    n: number,
+    ...args: any[]
+  ): string;
+  pgettext(msgctxt: string, msgid: string, ...args: any[]): string;
+  npgettext(
+    msgctxt: string,
+    msgid: string,
+    msgid_plural: string,
+    n: number,
+    ...args: any[]
+  ): string;
+  dcnpgettext(
+    domain: string,
+    msgctxt: string,
+    msgid: string,
+    msgid_plural: string,
+    n: number,
+    ...args: any[]
+  ): string;
+};
 
-/**
- * Translation provider interface
- */
-export interface ITranslator extends IRenderMime.ITranslator {}
+export interface ITranslator {
+  load(domain: string): TranslationBundle;
+  // locale(): string;
+}
 
 export const ITranslator = new Token<ITranslator>(
   '@jupyterlab/translation:ITranslator'

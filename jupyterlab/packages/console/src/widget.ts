@@ -200,7 +200,7 @@ export class CodeConsole extends Widget {
    * rendered code cell widgets and does not execute them (though it can store
    * the execution message id).
    */
-  addCell(cell: CodeCell, msgId?: string): void {
+  addCell(cell: CodeCell, msgId?: string) {
     cell.addClass(CONSOLE_CELL_CLASS);
     this._content.addWidget(cell);
     this._cells.push(cell);
@@ -215,7 +215,7 @@ export class CodeConsole extends Widget {
   /**
    * Add a banner cell.
    */
-  addBanner(): void {
+  addBanner() {
     if (this._banner) {
       // An old banner just becomes a normal cell now.
       const cell = this._banner;
@@ -261,7 +261,7 @@ export class CodeConsole extends Widget {
   /**
    * Dispose of the resources held by the widget.
    */
-  dispose(): void {
+  dispose() {
     // Do nothing if already disposed.
     if (this.isDisposed) {
       return;
@@ -428,8 +428,10 @@ export class CodeConsole extends Widget {
 
     const cell = this._cells.get(cellIndex);
 
-    const targetArea: CellDragUtils.ICellTargetArea =
-      CellDragUtils.detectTargetArea(cell, event.target as HTMLElement);
+    const targetArea: CellDragUtils.ICellTargetArea = CellDragUtils.detectTargetArea(
+      cell,
+      event.target as HTMLElement
+    );
 
     if (targetArea === 'prompt') {
       this._dragData = {
@@ -892,8 +894,7 @@ export namespace CodeConsole {
    */
   export class ContentFactory
     extends Cell.ContentFactory
-    implements IContentFactory
-  {
+    implements IContentFactory {
     /**
      * Create a new code cell widget.
      *

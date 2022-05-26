@@ -173,7 +173,7 @@ export namespace AttachmentModel {
   /**
    * Get the data for an attachment.
    *
-   * @param bundle - A kernel attachment MIME bundle.
+   * @params bundle - A kernel attachment MIME bundle.
    *
    * @returns - The data for the payload.
    */

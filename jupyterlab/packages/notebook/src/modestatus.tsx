@@ -1,10 +1,10 @@
+import { VDomModel, VDomRenderer } from '@jupyterlab/apputils';
 import { TextItem } from '@jupyterlab/statusbar';
 import {
   ITranslator,
   nullTranslator,
   TranslationBundle
 } from '@jupyterlab/translation';
-import { VDomModel, VDomRenderer } from '@jupyterlab/ui-components';
 import * as React from 'react';
 import { Notebook, NotebookMode } from '.';
 
@@ -71,7 +71,7 @@ export class CommandEditStatus extends VDomRenderer<CommandEditStatus.Model> {
   /**
    * Render the CommandEdit status item.
    */
-  render(): JSX.Element | null {
+  render() {
     if (!this.model) {
       return null;
     }
@@ -104,7 +104,7 @@ export namespace CommandEditStatus {
     /**
      * The current mode of the current notebook.
      */
-    get notebookMode(): NotebookMode {
+    get notebookMode() {
       return this._notebookMode;
     }
 

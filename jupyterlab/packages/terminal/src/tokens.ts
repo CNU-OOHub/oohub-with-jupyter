@@ -12,12 +12,14 @@ import { Widget } from '@lumino/widgets';
 export interface ITerminalTracker
   extends IWidgetTracker<MainAreaWidget<ITerminal.ITerminal>> {}
 
+/* tslint:disable */
 /**
  * The editor tracker token.
  */
 export const ITerminalTracker = new Token<ITerminalTracker>(
   '@jupyterlab/terminal:ITerminalTracker'
 );
+/* tslint:enable */
 
 /**
  * The namespace for terminals. Separated from the widget so it can be lazy

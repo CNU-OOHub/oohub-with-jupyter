@@ -86,9 +86,7 @@ describe('console/panel', () => {
       it('should start the session', async () => {
         Widget.attach(panel, document.body);
         await panel.sessionContext.ready;
-        await expect(
-          panel.sessionContext.session!.kernel!.info
-        ).resolves.not.toThrow();
+        await panel.sessionContext.session!.kernel!.info;
       });
     });
 

@@ -14,17 +14,14 @@ import {
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
 import {
+  CommandToolbarButton,
   ICommandPalette,
   MainAreaWidget,
+  Toolbar,
   WidgetTracker
 } from '@jupyterlab/apputils';
 import { IEditorServices } from '@jupyterlab/codeeditor';
-import {
-  CommandToolbarButton,
-  IFormComponentRegistry,
-  launchIcon,
-  Toolbar
-} from '@jupyterlab/ui-components';
+import { IFormComponentRegistry, launchIcon } from '@jupyterlab/ui-components';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import {
   IJSONSettingEditorTracker,
@@ -106,7 +103,7 @@ function activate(
   const openUi = async (args: { query: string }) => {
     if (tracker.currentWidget && !tracker.currentWidget.isDisposed) {
       if (!tracker.currentWidget.isAttached) {
-        shell.add(tracker.currentWidget, 'main', { type: 'Settings' });
+        shell.add(tracker.currentWidget);
       }
       shell.activateById(tracker.currentWidget.id);
       return;
@@ -152,7 +149,7 @@ function activate(
     editor.title.closable = true;
 
     void tracker.add(editor);
-    shell.add(editor, 'main', { type: 'Settings' });
+    shell.add(editor);
   };
 
   commands.addCommand(CommandIDs.open, {
@@ -172,7 +169,7 @@ function activate(
       if (args.label) {
         return args.label as string;
       }
-      return trans.__('Settings Editor');
+      return trans.__('Advanced Settings Editor');
     }
   });
 
@@ -242,9 +239,7 @@ function activateJSON(
     execute: async () => {
       if (tracker.currentWidget && !tracker.currentWidget.isDisposed) {
         if (!tracker.currentWidget.isAttached) {
-          shell.add(tracker.currentWidget, 'main', {
-            type: 'Advanced Settings'
-          });
+          shell.add(tracker.currentWidget);
         }
         shell.activateById(tracker.currentWidget.id);
         return;
@@ -303,9 +298,9 @@ function activateJSON(
       container.title.closable = true;
 
       void tracker.add(container);
-      shell.add(container, 'main', { type: 'Advanced Settings' });
+      shell.add(container);
     },
-    label: trans.__('Advanced Settings Editor')
+    label: trans.__('Advanced JSON Settings Editor')
   });
   if (palette) {
     palette.addItem({

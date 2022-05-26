@@ -33,7 +33,7 @@ export class Switch extends Widget {
   /**
    * The value of the switch.
    */
-  get value(): boolean {
+  get value() {
     return this._value;
   }
   set value(newValue: boolean) {
@@ -88,7 +88,7 @@ export class Switch extends Widget {
     this._button.addEventListener('click', this);
   }
 
-  protected onBeforeDetach(): void {
+  protected onBeforeDetach() {
     this._button.removeEventListener('click', this);
   }
 

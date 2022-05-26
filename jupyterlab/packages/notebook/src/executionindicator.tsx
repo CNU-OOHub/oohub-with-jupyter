@@ -1,7 +1,12 @@
 // Copyright (c) Jupyter Development Team.
 // Distributed under the terms of the Modified BSD License.
 
-import { ISessionContext, translateKernelStatuses } from '@jupyterlab/apputils';
+import {
+  ISessionContext,
+  translateKernelStatuses,
+  VDomModel,
+  VDomRenderer
+} from '@jupyterlab/apputils';
 
 import { ITranslator, nullTranslator } from '@jupyterlab/translation';
 import React from 'react';
@@ -10,9 +15,7 @@ import { interactiveItem, ProgressCircle } from '@jupyterlab/statusbar';
 import {
   circleIcon,
   LabIcon,
-  offlineBoltIcon,
-  VDomModel,
-  VDomRenderer
+  offlineBoltIcon
 } from '@jupyterlab/ui-components';
 
 import { Notebook } from './widget';
@@ -375,7 +378,7 @@ export namespace ExecutionIndicator {
      * @param nb - The notebook used to identify execution
      * state.
      *
-     * @returns - The associated execution state.
+     * @return - The associated execution state.
      */
     public executionState(nb: Notebook): Private.IExecutionState | undefined {
       return this._notebookExecutionProgress.get(nb);
@@ -557,10 +560,9 @@ export namespace ExecutionIndicator {
     return toolbarItem;
   }
 
-  export function getSettingValue(settings: ISettingRegistry.ISettings): {
-    showOnToolBar: boolean;
-    showProgress: boolean;
-  } {
+  export function getSettingValue(
+    settings: ISettingRegistry.ISettings
+  ): { showOnToolBar: boolean; showProgress: boolean } {
     let showOnToolBar = true;
     let showProgress = true;
     const configValues = settings.get('kernelStatus').composite as JSONObject;

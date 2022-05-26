@@ -12,19 +12,16 @@ describe('JupyterServer', () => {
     const server = new JupyterServer();
     const url = await server.start();
     await fetch(URLExt.join(url, 'api'));
-    await expect(server.shutdown()).resolves.not.toThrow();
+    await server.shutdown();
   });
 
   it('should accept options', async () => {
     jest.setTimeout(20000);
     const pageConfig = { foo: 'bar', fizz: 'buzz' };
     const configData = {
-      // eslint-disable-next-line camelcase
       FakeTrait: { fake_prop: 1 },
-      // eslint-disable-next-line camelcase
       OtherTrait: { other_prop: 'hello' },
       KernelManager: {
-        // eslint-disable-next-line camelcase
         shutdown_wait_time: 1.11
       }
     };

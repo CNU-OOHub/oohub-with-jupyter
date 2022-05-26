@@ -61,7 +61,7 @@ export namespace CodeEditor {
   /**
    * An interface describing editor state coordinates.
    */
-  export interface ICoordinate extends DOMRectReadOnly {}
+  export interface ICoordinate extends JSONObject, ClientRect {}
 
   /**
    * A range.

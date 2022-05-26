@@ -2,9 +2,9 @@ name: Linux JS Tests
 
 on:
   push:
-    branches: [master]
+    branches: [3.4.x]
   pull_request:
-    branches: [master]
+    branches: [3.4.x]
   release:
     types: [published]
 
@@ -16,9 +16,8 @@ jobs:
         group:
           [
             js-application,
-            js-apputils,
-            js-cell-toolbar,
             js-cells,
+            js-cell-toolbar,
             js-codeeditor,
             js-codemirror,
             js-completer,
@@ -40,7 +39,6 @@ jobs:
             js-observables,
             js-outputarea,
             js-rendermime,
-            js-services,
             js-settingregistry,
             js-statedb,
             js-statusbar,
@@ -48,7 +46,6 @@ jobs:
             js-toc,
             js-translation,
             js-ui-components,
-            js-user,
             js-testutils,
           ]
       fail-fast: false

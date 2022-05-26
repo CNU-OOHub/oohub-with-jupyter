@@ -278,7 +278,7 @@ describe('jupyter.services - Comm', () => {
           comm.send('quit');
         });
         await kernel.requestExecute({ code: SEND }, true).done;
-        await expect(promise.promise).resolves.not.toThrow();
+        await promise.promise;
       });
     });
 
@@ -326,7 +326,7 @@ describe('jupyter.services - Comm', () => {
           data,
           data.buffer
         ]);
-        await expect(future2.done).resolves.not.toThrow();
+        await future2.done;
       });
     });
 
@@ -334,13 +334,13 @@ describe('jupyter.services - Comm', () => {
       it('should send a message to the server', async () => {
         await comm.open().done;
         const future = comm.send({ foo: 'bar' }, { fizz: 'buzz' });
-        await expect(future.done).resolves.not.toThrow();
+        await future.done;
       });
 
       it('should pass through a buffers field', async () => {
         await comm.open().done;
         const future = comm.send({ buffers: 'bar' });
-        await expect(future.done).resolves.not.toThrow();
+        await future.done;
       });
     });
 
@@ -350,7 +350,7 @@ describe('jupyter.services - Comm', () => {
         const encoder = new TextEncoder();
         const data = encoder.encode('hello');
         const future = comm.close({ foo: 'bar' }, {}, [data, data.buffer]);
-        await expect(future.done).resolves.not.toThrow();
+        await future.done;
       });
 
       it('should trigger an onClose', async () => {

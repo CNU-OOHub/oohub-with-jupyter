@@ -5,21 +5,22 @@ import { ITranslator, nullTranslator } from '@jupyterlab/translation';
 
 import { showErrorMessage } from '@jupyterlab/apputils';
 
-import {
-  PanelWithToolbar,
-  refreshIcon,
-  searchIcon,
-  ToolbarButton
-} from '@jupyterlab/ui-components';
+import { ToolbarButton } from '@jupyterlab/apputils';
+
+import { refreshIcon, searchIcon } from '@jupyterlab/ui-components';
+
+import { Panel } from '@lumino/widgets';
 
 import { IDebugger } from '../../tokens';
 
 import { KernelSourcesBody } from './body';
 
+import { KernelSourcesHeader } from './header';
+
 /**
  * A Panel that shows a preview of the source code while debugging.
  */
-export class KernelSources extends PanelWithToolbar {
+export class KernelSources extends Panel {
   /**
    * Instantiate a new Sources preview Panel.
    *
@@ -31,7 +32,10 @@ export class KernelSources extends PanelWithToolbar {
     this._model = model;
     const trans = (options.translator ?? nullTranslator).load('jupyterlab');
     this.title.label = trans.__('Kernel Sources');
-    this.toolbar.addClass('jp-DebuggerKernelSources-header');
+
+    const header = new KernelSourcesHeader(model, options.translator);
+
+    header.addClass('jp-DebuggerKernelSources-header');
 
     this._body = new KernelSourcesBody({
       service,
@@ -39,7 +43,7 @@ export class KernelSources extends PanelWithToolbar {
       translator: options.translator
     });
 
-    this.toolbar.addItem(
+    header.toolbar.addItem(
       'open-filter',
       new ToolbarButton({
         icon: searchIcon,
@@ -50,14 +54,14 @@ export class KernelSources extends PanelWithToolbar {
       })
     );
 
-    this.toolbar.addItem(
+    header.toolbar.addItem(
       'refresh',
       new ToolbarButton({
         icon: refreshIcon,
         onClick: () => {
           this._model.kernelSources = [];
           void service.displayModules().catch(reason => {
-            showErrorMessage(
+            void showErrorMessage(
               trans.__('Fail to get kernel sources'),
               trans.__('Fail to get kernel sources:\n%2', reason)
             );
@@ -68,8 +72,10 @@ export class KernelSources extends PanelWithToolbar {
     );
 
     this.addClass('jp-DebuggerKernelSources-header');
+    this.addClass('jp-DebuggerKernelSources');
+
+    this.addWidget(header);
     this.addWidget(this._body);
-    this.addClass('jp-DebuggerKenelSources');
   }
 
   public set filter(filter: string) {

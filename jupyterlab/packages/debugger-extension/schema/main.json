@@ -35,9 +35,19 @@
   },
   "jupyter.lab.shortcuts": [
     {
-      "command": "debugger:show-panel",
-      "keys": ["Accel Shift E"],
-      "selector": "body"
+      "command": "debugger:debug-console",
+      "keys": ["Accel Shift I"],
+      "selector": ".jp-CodeConsole"
+    },
+    {
+      "command": "debugger:debug-file",
+      "keys": ["Accel Shift I"],
+      "selector": ".jp-FileEditor"
+    },
+    {
+      "command": "debugger:debug-notebook",
+      "keys": ["Accel Shift I"],
+      "selector": ".jp-Notebook"
     },
     {
       "command": "debugger:continue",

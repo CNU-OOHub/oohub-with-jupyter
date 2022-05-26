@@ -108,7 +108,7 @@ export class RenderedPDF extends Widget implements IRenderMime.IRenderer {
   /**
    * Dispose of the resources held by the pdf widget.
    */
-  dispose(): void {
+  dispose() {
     if (this._disposable) {
       this._disposable.dispose();
     }
@@ -138,7 +138,6 @@ const extensions: IRenderMime.IExtension | IRenderMime.IExtension[] = [
     dataType: 'string',
     documentWidgetFactoryOptions: {
       name: 'PDF',
-      // TODO: translate label
       modelName: 'base64',
       primaryFileType: 'PDF',
       fileTypes: ['PDF'],

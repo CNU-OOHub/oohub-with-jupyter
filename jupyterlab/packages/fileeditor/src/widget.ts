@@ -29,40 +29,57 @@ const CODE_RUNNER = 'jpCodeRunner';
 const UNDOER = 'jpUndoer';
 
 /**
- * A widget for editors.
+ * A code editor wrapper for the file editor.
+ *
+ * @deprecated since v3.4
+ * Note: This class will be removed in v4.0.
+ * From now on, you can directly use the class
+ * `CodeEditorWrapper` instead on `FileEditorCodeWrapper`.
  */
-export class FileEditor extends Widget {
+export class FileEditorCodeWrapper extends CodeEditorWrapper {
   /**
    * Construct a new editor widget.
    */
   constructor(options: FileEditor.IOptions) {
-    super();
-    this.addClass('jp-FileEditor');
+    super({
+      factory: options.factory,
+      model: options.context.model
+    });
 
     const context = (this._context = options.context);
-    this._mimeTypeService = options.mimeTypeService;
 
-    const editorWidget = (this._editorWidget = new CodeEditorWrapper({
-      factory: options.factory,
-      model: context.model
-    }));
-    this._editorWidget.addClass('jp-FileEditorCodeWrapper');
-    this._editorWidget.node.dataset[CODE_RUNNER] = 'true';
-    this._editorWidget.node.dataset[UNDOER] = 'true';
-
-    this.editor = editorWidget.editor;
-    this.model = editorWidget.model;
+    // TODO: move this to the FileEditor when removing the
+    // `FileEditorCodeWrapper`
+    this.addClass('jp-FileEditorCodeWrapper');
+    this.node.dataset[CODE_RUNNER] = 'true';
+    this.node.dataset[UNDOER] = 'true';
 
     void context.ready.then(() => {
       this._onContextReady();
     });
 
-    // Listen for changes to the path.
-    context.pathChanged.connect(this._onPathChanged, this);
-    this._onPathChanged();
+    if (context.model.modelDB.isCollaborative) {
+      const modelDB = context.model.modelDB;
+      void modelDB.connected.then(() => {
+        const collaborators = modelDB.collaborators;
+        if (!collaborators) {
+          return;
+        }
 
-    const layout = (this.layout = new StackedLayout());
-    layout.addWidget(editorWidget);
+        // Setup the selection style for collaborators
+        const localCollaborator = collaborators.localCollaborator;
+        this.editor.uuid = localCollaborator.sessionId;
+
+        this.editor.selectionStyle = {
+          ...CodeEditor.defaultSelectionStyle,
+          color: localCollaborator.color
+        };
+
+        collaborators.changed.connect(this._onCollaboratorsChanged, this);
+        // Trigger an initial onCollaboratorsChanged event.
+        this._onCollaboratorsChanged();
+      });
+    }
   }
 
   /**
@@ -76,7 +93,85 @@ export class FileEditor extends Widget {
    * A promise that resolves when the file editor is ready.
    */
   get ready(): Promise<void> {
-    return this.ready;
+    return this._ready.promise;
+  }
+
+  /**
+   * Handle actions that should be taken when the context is ready.
+   */
+  private _onContextReady(): void {
+    if (this.isDisposed) {
+      return;
+    }
+
+    // Prevent the initial loading from disk from being in the editor history.
+    this.editor.clearHistory();
+    // Resolve the ready promise.
+    this._ready.resolve(undefined);
+  }
+
+  /**
+   * Handle a change to the collaborators on the model
+   * by updating UI elements associated with them.
+   */
+  private _onCollaboratorsChanged(): void {
+    // If there are selections corresponding to non-collaborators,
+    // they are stale and should be removed.
+    const collaborators = this._context.model.modelDB.collaborators;
+    if (!collaborators) {
+      return;
+    }
+    for (const key of this.editor.model.selections.keys()) {
+      if (!collaborators.has(key)) {
+        this.editor.model.selections.delete(key);
+      }
+    }
+  }
+
+  protected _context: DocumentRegistry.Context;
+  private _ready = new PromiseDelegate<void>();
+}
+
+/**
+ * A widget for editors.
+ */
+export class FileEditor extends Widget {
+  /**
+   * Construct a new editor widget.
+   */
+  constructor(options: FileEditor.IOptions) {
+    super();
+    this.addClass('jp-FileEditor');
+
+    const context = (this._context = options.context);
+    this._mimeTypeService = options.mimeTypeService;
+
+    const editorWidget = (this.editorWidget = new FileEditorCodeWrapper(
+      options
+    ));
+    this.editor = editorWidget.editor;
+    this.model = editorWidget.model;
+
+    // Listen for changes to the path.
+    context.pathChanged.connect(this._onPathChanged, this);
+    this._onPathChanged();
+
+    const layout = (this.layout = new StackedLayout());
+    layout.addWidget(editorWidget);
+  }
+
+  /**
+   * Get the context for the editor widget.
+   */
+  get context(): DocumentRegistry.Context {
+    return this.editorWidget.context;
+  }
+
+  /**
+   * A promise that resolves when the file editor is ready.
+   */
+  get ready(): Promise<void> {
+    return this.editorWidget.ready;
   }
 
   /**
@@ -136,36 +231,22 @@ export class FileEditor extends Widget {
   }
 
   /**
-   * Handle actions that should be taken when the context is ready.
-   */
-  private _onContextReady(): void {
-    if (this.isDisposed) {
-      return;
-    }
-
-    // Prevent the initial loading from disk from being in the editor history.
-    this.editor.clearHistory();
-    // Resolve the ready promise.
-    this._ready.resolve(undefined);
-  }
-
-  /**
    * Handle a change to the path.
    */
   private _onPathChanged(): void {
     const editor = this.editor;
     const localPath = this._context.localPath;
 
-    editor.model.mimeType =
-      this._mimeTypeService.getMimeTypeByFilePath(localPath);
+    editor.model.mimeType = this._mimeTypeService.getMimeTypeByFilePath(
+      localPath
+    );
   }
 
-  model: CodeEditor.IModel;
-  editor: CodeEditor.IEditor;
-  private _context: DocumentRegistry.Context;
-  private _editorWidget: CodeEditorWrapper;
+  private editorWidget: FileEditorCodeWrapper;
+  public model: CodeEditor.IModel;
+  public editor: CodeEditor.IEditor;
+  protected _context: DocumentRegistry.Context;
   private _mimeTypeService: IEditorMimeTypeService;
-  private _ready = new PromiseDelegate<void>();
 }
 
 /**

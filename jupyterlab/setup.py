@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 # coding: utf-8
-# Copyright (c) Jupyter Development Team.
-# Distributed under the terms of the Modified BSD License.
 
 import json
 import os
 import os.path as osp
 import subprocess
 import sys
+
+# Copyright (c) Jupyter Development Team.
+# Distributed under the terms of the Modified BSD License.
 from os.path import join as pjoin
 
 from setuptools import setup
@@ -48,7 +49,7 @@ def post_dist():
         version = json.load(fid)["jupyterlab"]["version"]
 
     if Version(version) != Version(get_version(f"{NAME}/_version.py")):
-        raise ValueError("Version mismatch, please run `npm run prepare:python-release`")
+        raise ValueError("Version mismatch, please run `build:update`")
 
 
 try:
@@ -75,9 +76,12 @@ try:
     else:
         cmdclass = wrap_installers(post_dist=post_dist, ensured_targets=ensured_targets)
 
-    setup_args = dict(cmdclass=cmdclass, data_files=get_data_files(data_files_spec))
+    setup_args = dict(
+        cmdclass=cmdclass,
+        data_files=get_data_files(data_files_spec)
+    )
 except ImportError:
-    setup_args = {}
+    setup_args = dict()
 
 
 if __name__ == "__main__":

@@ -1,7 +1,9 @@
 // Copyright (c) Jupyter Development Team.
 // Distributed under the terms of the Modified BSD License.
 
-import { InputGroup, ReactWidget, UseSignal } from '@jupyterlab/ui-components';
+import { ReactWidget, UseSignal } from '@jupyterlab/apputils';
+
+import { InputGroup } from '@jupyterlab/ui-components';
 
 import React from 'react';
 

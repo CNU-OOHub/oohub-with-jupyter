@@ -3,7 +3,7 @@
 
 import { openKernelSourceIcon } from '../../icons';
 
-import { ReactWidget, ToolbarButton } from '@jupyterlab/ui-components';
+import { ReactWidget, ToolbarButton } from '@jupyterlab/apputils';
 
 import { showErrorMessage } from '@jupyterlab/apputils';
 
@@ -72,7 +72,7 @@ export class KernelSourcesBody extends Widget {
                 this._model.open(source);
               })
               .catch(reason => {
-                showErrorMessage(
+                void showErrorMessage(
                   trans.__('Fail to get source'),
                   trans.__("Fail to get '%1' source:\n%2", path, reason)
                 );

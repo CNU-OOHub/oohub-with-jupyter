@@ -1,23 +1,31 @@
 // Copyright (c) Jupyter Development Team.
 // Distributed under the terms of the Modified BSD License.
 
-import { Dialog, showDialog } from '@jupyterlab/apputils';
-import { ITranslator, nullTranslator } from '@jupyterlab/translation';
 import {
   CommandToolbarButton,
-  PanelWithToolbar,
+  Dialog,
+  showDialog,
   ToolbarButton
-} from '@jupyterlab/ui-components';
+} from '@jupyterlab/apputils';
+
+import { ITranslator, nullTranslator } from '@jupyterlab/translation';
 import { CommandRegistry } from '@lumino/commands';
 import { Signal } from '@lumino/signaling';
+
 import { Panel } from '@lumino/widgets';
+
 import { closeAllIcon } from '../../icons';
+
 import { IDebugger } from '../../tokens';
+
 import { BreakpointsBody } from './body';
+
+import { BreakpointsHeader } from './header';
+
 /**
  * A Panel to show a list of breakpoints.
  */
-export class Breakpoints extends PanelWithToolbar {
+export class Breakpoints extends Panel {
   /**
    * Instantiate a new Breakpoints Panel.
    *
@@ -26,12 +34,14 @@ export class Breakpoints extends PanelWithToolbar {
   constructor(options: Breakpoints.IOptions) {
     super(options);
     const { model, service, commands } = options;
+    const translator = options.translator || nullTranslator;
     const trans = (options.translator ?? nullTranslator).load('jupyterlab');
     this.title.label = trans.__('Breakpoints');
 
+    const header = new BreakpointsHeader(translator);
     const body = new BreakpointsBody(model);
 
-    this.toolbar.addItem(
+    header.toolbar.addItem(
       'pause',
       new CommandToolbarButton({
         commands: commands.registry,
@@ -40,7 +50,7 @@ export class Breakpoints extends PanelWithToolbar {
       })
     );
 
-    this.toolbar.addItem(
+    header.toolbar.addItem(
       'closeAll',
       new ToolbarButton({
         icon: closeAllIcon,
@@ -65,7 +75,9 @@ export class Breakpoints extends PanelWithToolbar {
       })
     );
 
+    this.addWidget(header);
     this.addWidget(body);
+
     this.addClass('jp-DebuggerBreakpoints');
   }
 

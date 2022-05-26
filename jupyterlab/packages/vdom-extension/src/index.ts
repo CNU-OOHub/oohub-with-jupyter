@@ -16,7 +16,6 @@ import { INotebookTracker } from '@jupyterlab/notebook';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { reactIcon } from '@jupyterlab/ui-components';
 import { IVDOMTracker, RenderedVDOM } from '@jupyterlab/vdom';
-import { ITranslator, nullTranslator } from '@jupyterlab/translation';
 
 /**
  * The MIME type for VDOM.
@@ -31,15 +30,14 @@ const FACTORY_NAME = 'VDOM';
 const plugin: JupyterFrontEndPlugin<IVDOMTracker> = {
   id: '@jupyterlab/vdom-extension:factory',
   requires: [IRenderMimeRegistry],
-  optional: [INotebookTracker, ILayoutRestorer, ITranslator],
+  optional: [INotebookTracker, ILayoutRestorer],
   provides: IVDOMTracker,
   autoStart: true,
   activate: (
     app: JupyterFrontEnd,
     rendermime: IRenderMimeRegistry,
     notebooks: INotebookTracker | null,
-    restorer: ILayoutRestorer | null,
-    translator: ITranslator | null
+    restorer: ILayoutRestorer | null
   ) => {
     const tracker = new WidgetTracker<MimeDocument>({
       namespace: 'vdom-widget'
@@ -82,14 +80,11 @@ const plugin: JupyterFrontEndPlugin<IVDOMTracker> = {
       icon: reactIcon
     });
 
-    const trans = (translator || nullTranslator).load('jupyterlab');
-
     const factory = new MimeDocumentFactory({
       renderTimeout: 1000,
       dataType: 'json',
       rendermime,
       name: FACTORY_NAME,
-      label: trans.__('VDOM'),
       primaryFileType: app.docRegistry.getFileType('vdom')!,
       fileTypes: ['vdom', 'json'],
       defaultFor: ['vdom']

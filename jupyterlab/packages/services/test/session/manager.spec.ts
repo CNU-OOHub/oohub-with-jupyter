@@ -41,8 +41,24 @@ afterAll(async () => {
 });
 
 describe('session/manager', () => {
-  beforeAll(async () => {
+  let kernelManager: KernelManager;
+  let manager: SessionManager;
+  let session: Session.ISessionConnection;
+
+  beforeAll(() => {
     jest.setTimeout(20000);
+    kernelManager = new KernelManager({ standby: 'never' });
+  });
+
+  beforeEach(async () => {
+    manager = new SessionManager({ kernelManager, standby: 'never' });
+    await manager.ready;
+    session = await startNew(manager);
+    await session.kernel!.info;
+  });
+
+  afterEach(() => {
+    manager.dispose();
   });
 
   afterAll(async () => {
@@ -51,22 +67,6 @@ describe('session/manager', () => {
   });
 
   describe('SessionManager', () => {
-    let kernelManager: KernelManager;
-    let manager: SessionManager;
-    let session: Session.ISessionConnection;
-
-    beforeEach(async () => {
-      kernelManager = new KernelManager({ standby: 'never' });
-      manager = new SessionManager({ kernelManager, standby: 'never' });
-      await manager.ready;
-      session = await startNew(manager);
-      await session.kernel!.info;
-    });
-
-    afterEach(() => {
-      manager.dispose();
-    });
-
     describe('#constructor()', () => {
       it('should create a new session manager', () => {
         expect(manager instanceof SessionManager).toBe(true);
@@ -96,7 +96,7 @@ describe('session/manager', () => {
 
     describe('#ready', () => {
       it('should resolve when the manager is ready', async () => {
-        await expect(manager.ready).resolves.not.toThrow();
+        await manager.ready;
       });
     });
 
@@ -230,95 +230,7 @@ describe('session/manager', () => {
         const session1 = manager.connectTo({ model: session0.model });
         const emission = testEmission(session1.disposed);
         await session0.shutdown();
-        await expect(emission).resolves.not.toThrow();
-      });
-    });
-  });
-
-  describe('NoopManager', () => {
-    let manager: SessionManager.NoopManager;
-    let kernelManager: KernelManager.NoopManager;
-
-    beforeEach(async () => {
-      kernelManager = new KernelManager.NoopManager({ standby: 'never' });
-      await kernelManager.parentReady;
-      manager = new SessionManager.NoopManager({
-        kernelManager,
-        standby: 'never'
-      });
-      await manager.parentReady;
-    });
-
-    afterEach(() => {
-      manager.dispose();
-    });
-
-    describe('#constructor()', () => {
-      it('should take the options as an argument', async () => {
-        manager.dispose();
-        manager = new SessionManager.NoopManager({
-          kernelManager,
-          standby: 'never'
-        });
-        await manager.parentReady;
-        expect(manager instanceof SessionManager.NoopManager).toBe(true);
-      });
-    });
-
-    describe('#serverSettings', () => {
-      it('should get the server settings', async () => {
-        manager.dispose();
-        const serverSettings = ServerConnection.makeSettings();
-        const standby = 'never';
-        const token = serverSettings.token;
-        manager = new SessionManager.NoopManager({
-          kernelManager,
-          serverSettings,
-          standby
-        });
-        await manager.parentReady;
-        expect(manager.serverSettings.token).toBe(token);
-      });
-    });
-
-    describe('#running()', () => {
-      it('should get the running sessions', async () => {
-        await manager.refreshRunning();
-        expect(toArray(manager.running()).length).toEqual(0);
-      });
-    });
-
-    describe('#refreshRunning()', () => {
-      it('should update the running kernels', async () => {
-        await manager.refreshRunning();
-        expect(toArray(manager.running()).length).toEqual(0);
-      });
-    });
-
-    describe('#startNew()', () => {
-      it('should throw an error', () => {
-        return expect(startNew(manager)).rejects.toThrow();
-      });
-    });
-
-    describe('#connectTo()', () => {
-      it('should throw an error', () => {
-        const model = {
-          id: UUID.uuid4(),
-          path: UUID.uuid4(),
-          name: UUID.uuid4(),
-          type: 'MYTEST',
-          kernel: { name: 'foo', id: UUID.uuid4() }
-        };
-        return expect(() => {
-          manager.connectTo({ model });
-        }).toThrow();
-      });
-    });
-
-    describe('shutdown()', () => {
-      it('should throw an error', () => {
-        return expect(manager.shutdown(UUID.uuid4())).rejects.toThrow();
+        await emission;
       });
     });
   });

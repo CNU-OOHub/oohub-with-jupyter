@@ -10,12 +10,7 @@ import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
-import {
-  CodeEditor,
-  IEditorServices,
-  IPositionModel,
-  LineCol
-} from '@jupyterlab/codeeditor';
+import { IEditorServices } from '@jupyterlab/codeeditor';
 import {
   CodeMirrorEditor,
   editorServices,
@@ -25,11 +20,10 @@ import {
 } from '@jupyterlab/codemirror';
 import { IDocumentWidget } from '@jupyterlab/docregistry';
 import { FileEditor, IEditorTracker } from '@jupyterlab/fileeditor';
-import { IMainMenu } from '@jupyterlab/mainmenu';
+import { IEditMenu, IMainMenu } from '@jupyterlab/mainmenu';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { IStatusBar } from '@jupyterlab/statusbar';
 import { ITranslator } from '@jupyterlab/translation';
-import { Widget } from '@lumino/widgets';
 import CodeMirror from 'codemirror';
 
 /**
@@ -97,9 +91,9 @@ export const editorSyntaxStatus: JupyterFrontEndPlugin<void> = {
     labShell.currentChanged.connect(() => {
       const current = labShell.currentWidget;
       if (current && tracker.has(current) && item.model) {
-        item.model.editor = (
-          current as IDocumentWidget<FileEditor>
-        ).content.editor;
+        item.model.editor = (current as IDocumentWidget<
+          FileEditor
+        >).content.editor;
       }
     });
     statusBar.registerStatusItem(
@@ -118,82 +112,12 @@ export const editorSyntaxStatus: JupyterFrontEndPlugin<void> = {
 };
 
 /**
- * A plugin providing a line/column status item to the application.
- */
-export const lineColItem: JupyterFrontEndPlugin<IPositionModel> = {
-  id: '@jupyterlab/codemirror-extension:line-col-status',
-  autoStart: true,
-  requires: [ITranslator],
-  optional: [ILabShell, IStatusBar],
-  provides: IPositionModel,
-  activate: (
-    app: JupyterFrontEnd,
-    translator: ITranslator,
-    labShell: ILabShell | null,
-    statusBar: IStatusBar | null
-  ): IPositionModel => {
-    const item = new LineCol(translator);
-
-    const providers = new Set<
-      (widget: Widget | null) => CodeEditor.IEditor | null
-    >();
-
-    if (statusBar) {
-      // Add the status item to the status bar.
-      statusBar.registerStatusItem(lineColItem.id, {
-        item,
-        align: 'right',
-        rank: 2,
-        isActive: () => !!item.model.editor
-      });
-    }
-
-    const addEditorProvider = (
-      provider: (widget: Widget | null) => CodeEditor.IEditor | null
-    ): void => {
-      providers.add(provider);
-
-      if (app.shell.currentWidget) {
-        updateEditor(app.shell, {
-          newValue: app.shell.currentWidget,
-          oldValue: null
-        });
-      }
-    };
-
-    const update = (): void => {
-      updateEditor(app.shell, {
-        oldValue: app.shell.currentWidget,
-        newValue: app.shell.currentWidget
-      });
-    };
-
-    function updateEditor(
-      shell: JupyterFrontEnd.IShell,
-      changes: ILabShell.IChangedArgs
-    ) {
-      item.model.editor =
-        [...providers]
-          .map(provider => provider(changes.newValue))
-          .filter(editor => editor !== null)[0] ?? null;
-    }
-
-    if (labShell) {
-      labShell.currentChanged.connect(updateEditor);
-    }
-
-    return { addEditorProvider, update };
-  }
-};
-
-/**
  * Export the plugins as default.
  */
 const plugins: JupyterFrontEndPlugin<any>[] = [
   commands,
   services,
   editorSyntaxStatus,
-  lineColItem,
   codemirrorSingleton
 ];
 export default plugins;
@@ -223,7 +147,7 @@ class CodeMirrorSingleton implements ICodeMirror {
 
   async ensureVimKeymap() {
     if (!('Vim' in (CodeMirror as any))) {
-      // @ts-expect-error Import non typed package
+      // @ts-expect-error
       await import('codemirror/keymap/vim.js');
     }
   }
@@ -439,9 +363,7 @@ function activateEditorCommands(
   });
 
   commands.addCommand(CommandIDs.changeMode, {
-    label: args =>
-      (args['name'] as string) ??
-      trans.__('Change editor mode to the provided `name`.'),
+    label: args => args['name'] as string,
     execute: args => {
       const name = args['name'] as string;
       const widget = tracker.currentWidget;
@@ -492,8 +414,11 @@ function activateEditorCommands(
     }
     // Add go to line capabilities to the edit menu.
     mainMenu.editMenu.goToLiners.add({
-      id: CommandIDs.goToLine,
-      isEnabled: (w: Widget) => tracker.currentWidget !== null && tracker.has(w)
-    });
+      tracker,
+      goToLine: (widget: IDocumentWidget<FileEditor>) => {
+        const editor = widget.content.editor as CodeMirrorEditor;
+        editor.execCommand('jumpToLine');
+      }
+    } as IEditMenu.IGoToLiner<IDocumentWidget<FileEditor>>);
   }
 }

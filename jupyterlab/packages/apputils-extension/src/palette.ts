@@ -100,7 +100,8 @@ export namespace Palette {
       'aria-label',
       trans.__('Command Palette Section')
     );
-    shell.add(palette, 'left', { rank: 300, type: 'Command Palette' });
+    shell.add(palette, 'left', { rank: 300 });
+
     if (settingRegistry) {
       const loadSettings = settingRegistry.load(PALETTE_PLUGIN_ID);
       const updateSettings = (settings: ISettingRegistry.ISettings): void => {
@@ -108,7 +109,7 @@ export namespace Palette {
         if (modal && !newModal) {
           palette.parent = null;
           modalPalette.detach();
-          shell.add(palette, 'left', { rank: 300, type: 'Command Palette' });
+          shell.add(palette, 'left', { rank: 300 });
         } else if (!modal && newModal) {
           palette.parent = null;
           modalPalette.palette = palette;

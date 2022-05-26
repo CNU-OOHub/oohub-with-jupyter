@@ -8,12 +8,14 @@ import { IDisposable } from '@lumino/disposable';
 import { ISignal } from '@lumino/signaling';
 import { Widget } from '@lumino/widgets';
 
+/* tslint:disable */
 /**
  * The document registry token.
  */
 export const IDocumentManager = new Token<IDocumentManager>(
   '@jupyterlab/docmanager:IDocumentManager'
 );
+/* tslint:enable */
 
 /**
  * The interface for a document manager.
@@ -43,11 +45,6 @@ export interface IDocumentManager extends IDisposable {
    * Determines the time interval for autosave in seconds.
    */
   autosaveInterval: number;
-
-  /**
-   * Defines max acceptable difference, in milliseconds, between last modified timestamps on disk and client.
-   */
-  lastModifiedCheckMargin: number;
 
   /**
    * Clone a widget.

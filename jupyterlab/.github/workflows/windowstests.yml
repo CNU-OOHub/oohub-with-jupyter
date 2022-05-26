@@ -2,9 +2,9 @@ name: Windows Tests
 
 on:
   push:
-    branches: [master]
+    branches: [3.4.x]
   pull_request:
-    branches: [master]
+    branches: [3.4.x]
   release:
     types: [published]
 

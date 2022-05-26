@@ -47,7 +47,7 @@ describe('@jupyterlab/notebook', () => {
           const promise = signalToPromise(context.fileChanged);
           await framePromise();
           simulate(button.node.firstChild as HTMLElement, 'mousedown');
-          await expect(promise).resolves.not.toThrow();
+          await promise;
           button.dispose();
         });
 
@@ -259,7 +259,7 @@ describe('@jupyterlab/notebook', () => {
             }
           });
           simulate(button.node.firstChild as HTMLElement, 'mousedown');
-          await expect(delegate.promise).resolves.not.toThrow();
+          await delegate.promise;
           button.dispose();
         });
 
@@ -292,7 +292,7 @@ describe('@jupyterlab/notebook', () => {
           });
           simulate(button.node.firstChild as HTMLElement, 'mousedown');
           await acceptDialog();
-          await expect(delegate.promise).resolves.not.toThrow();
+          await delegate.promise;
           button.dispose();
         });
 

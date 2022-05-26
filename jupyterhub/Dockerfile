@@ -98,9 +98,16 @@ WORKDIR /srv/jupyterhub/
 COPY ./jupyterlab /srv/jupyterhub/
 
 RUN pip install --upgrade pip 
-WORKDIR /srv/jupyterhub/jupyterlab
-# RUN python3 setup.py install
-RUN pip install jupyterlab
+#WORKDIR /srv/jupyterhub/jupyterlab
+RUN cd jupyterlab
+RUN pip3 install nbconvert
+RUN pip3 install jupyterlab
+RUN npm install -g n
+RUN n stable
+
+RUN python3 setup.py install
+RUN pip3 install -e .
+RUN jlpm install
 
 WORKDIR /srv/jupyterhub/
 # my config file

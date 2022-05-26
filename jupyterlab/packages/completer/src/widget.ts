@@ -1,10 +1,9 @@
 // Copyright (c) Jupyter Development Team.
 // Distributed under the terms of the Modified BSD License.
 
-import { defaultSanitizer } from '@jupyterlab/apputils';
+import { defaultSanitizer, HoverBox } from '@jupyterlab/apputils';
 import { CodeEditor } from '@jupyterlab/codeeditor';
-import { renderText } from '@jupyterlab/rendermime';
-import { HoverBox, LabIcon } from '@jupyterlab/ui-components';
+import { LabIcon } from '@jupyterlab/ui-components';
 import { IIterator, IterableOrArrayLike, toArray } from '@lumino/algorithm';
 import { JSONExt, JSONObject } from '@lumino/coreutils';
 import { IDisposable } from '@lumino/disposable';
@@ -12,7 +11,6 @@ import { ElementExt } from '@lumino/domutils';
 import { Message } from '@lumino/messaging';
 import { ISignal, Signal } from '@lumino/signaling';
 import { Widget } from '@lumino/widgets';
-
 import { CompletionHandler } from './handler';
 
 /**
@@ -62,7 +60,6 @@ export class Completer extends Widget {
   constructor(options: Completer.IOptions) {
     super({ node: document.createElement('div') });
     this._renderer = options.renderer || Completer.defaultRenderer;
-
     this.model = options.model || null;
     this.editor = options.editor || null;
     this.addClass('jp-Completer');
@@ -78,10 +75,10 @@ export class Completer extends Widget {
   /**
    * The editor used by the completion widget.
    */
-  get editor(): CodeEditor.IEditor | null | undefined {
+  get editor(): CodeEditor.IEditor | null {
     return this._editor;
   }
-  set editor(newValue: CodeEditor.IEditor | null | undefined) {
+  set editor(newValue: CodeEditor.IEditor | null) {
     this._editor = newValue;
   }
 
@@ -130,20 +127,9 @@ export class Completer extends Widget {
   }
 
   /**
-   * Enable/disable the document panel.
-   */
-  set showDocsPanel(showDoc: boolean) {
-    this._showDoc = showDoc;
-  }
-
-  get showDocsPanel(): boolean {
-    return this._showDoc;
-  }
-
-  /**
    * Dispose of the resources held by the completer widget.
    */
-  dispose(): void {
+  dispose() {
     this._model = null;
     super.dispose();
   }
@@ -235,6 +221,7 @@ export class Completer extends Widget {
    */
   protected onUpdateRequest(msg: Message): void {
     const model = this._model;
+
     if (!model) {
       return;
     }
@@ -263,13 +250,10 @@ export class Completer extends Widget {
     active.classList.add(ACTIVE_CLASS);
 
     // Add the documentation panel
-    if (this._showDoc) {
-      let docPanel = document.createElement('div');
-      docPanel.className = 'jp-Completer-docpanel';
-      node.appendChild(docPanel);
-    }
-    const resolvedItem = this.model?.resolveItem(this._activeIndex);
-    this._updateDocPanel(resolvedItem);
+    let docPanel = document.createElement('div');
+    docPanel.className = 'jp-Completer-docpanel';
+    node.appendChild(docPanel);
+    this._updateDocPanel();
 
     // If this is the first time the current completer session has loaded,
     // populate any initial subset match.
@@ -419,9 +403,7 @@ export class Completer extends Widget {
     ) as Element;
     ElementExt.scrollIntoViewIfNeeded(completionList, active);
     this._indexChanged.emit(this._activeIndex);
-
-    const resolvedItem = this.model?.resolveItem(this._activeIndex);
-    this._updateDocPanel(resolvedItem);
+    this._updateDocPanel();
   }
 
   /**
@@ -599,7 +581,7 @@ export class Completer extends Widget {
 
     const start = model.cursor.start;
     const position = editor.getPositionAt(start) as CodeEditor.IPosition;
-    const anchor = editor.getCoordinateForPosition(position) as DOMRect;
+    const anchor = editor.getCoordinateForPosition(position) as ClientRect;
     const style = window.getComputedStyle(node);
     const borderLeft = parseInt(style.borderLeftWidth!, 10) || 0;
     const paddingLeft = parseInt(style.paddingLeft!, 10) || 0;
@@ -618,56 +600,43 @@ export class Completer extends Widget {
   }
 
   /**
-   * Create a loading bar element for document panel.
-   */
-  private _createLoadingBar(): HTMLElement {
-    const loadingContainer = document.createElement('div');
-    loadingContainer.classList.add('jp-Completer-loading-bar-container');
-    const loadingBar = document.createElement('div');
-    loadingBar.classList.add('jp-Completer-loading-bar');
-    loadingContainer.append(loadingBar);
-    return loadingContainer;
-  }
-  /**
    * Update the display-state and contents of the documentation panel
    */
-  private _updateDocPanel(
-    resolvedItem: Promise<CompletionHandler.ICompletionItem | null> | undefined
-  ): void {
+  private _updateDocPanel(): void {
     let docPanel = this.node.querySelector('.jp-Completer-docpanel');
     if (!docPanel) {
       return;
     }
-
-    if (!resolvedItem) {
+    if (!this.model?.completionItems) {
+      return;
+    }
+    let items = this.model?.completionItems();
+    if (!items) {
+      docPanel.setAttribute('style', 'display:none');
+      return;
+    }
+    let activeItem = items[this._activeIndex];
+    if (!activeItem) {
       docPanel.setAttribute('style', 'display:none');
       return;
     }
     docPanel.textContent = '';
-    docPanel.appendChild(this._createLoadingBar());
-    resolvedItem
-      .then(activeItem => {
-        if (!activeItem) {
-          return;
-        }
-        if (activeItem.documentation) {
-          let node: HTMLElement;
-          const nodeRenderer =
-            this._renderer.createDocumentationNode ??
-            Completer.defaultRenderer.createDocumentationNode;
-          node = nodeRenderer(activeItem);
-          docPanel!.textContent = '';
-          docPanel!.appendChild(node);
-          docPanel!.setAttribute('style', '');
-        } else {
-          docPanel!.setAttribute('style', 'display:none');
-        }
-      })
-      .catch(e => console.error(e));
+    if (activeItem.documentation) {
+      let node: HTMLElement;
+      if (!this._renderer.createDocumentationNode) {
+        node = Completer.defaultRenderer.createDocumentationNode(activeItem);
+      } else {
+        node = this._renderer.createDocumentationNode(activeItem);
+      }
+      docPanel.appendChild(node);
+      docPanel.setAttribute('style', '');
+    } else {
+      docPanel.setAttribute('style', 'display:none');
+    }
   }
 
   private _activeIndex = 0;
-  private _editor: CodeEditor.IEditor | null | undefined = null;
+  private _editor: CodeEditor.IEditor | null = null;
   private _model: Completer.IModel | null = null;
   private _renderer: Completer.IRenderer;
   private _resetFlag = false;
@@ -675,7 +644,6 @@ export class Completer extends Widget {
   private _visibilityChanged = new Signal<this, void>(this);
   private _indexChanged = new Signal<this, number>(this);
   private _lastSubsetMatch: string = '';
-  private _showDoc: boolean;
 }
 
 export namespace Completer {
@@ -702,11 +670,6 @@ export namespace Completer {
      * The renderer for the completer widget nodes.
      */
     renderer?: IRenderer;
-
-    /**
-     * Flag to show or hide the document panel.
-     */
-    showDoc?: boolean;
   }
 
   /**
@@ -787,17 +750,6 @@ export namespace Completer {
      * Get the of visible items in the completer menu.
      */
     items(): IIterator<IItem>;
-
-    /**
-     * Lazy load missing data of item at `activeIndex`.
-     * @param {number} activeIndex - index of item
-     * @return Return `undefined` if the completion item with `activeIndex` index can not be found.
-     *  Return a promise of `null` if another `resolveItem` is called. Otherwise return the
-     * promise of resolved completion item.
-     */
-    resolveItem(
-      activeIndex: number
-    ): Promise<CompletionHandler.ICompletionItem | null> | undefined;
 
     /**
      * Get the unfiltered options in a completer menu.
@@ -899,14 +851,15 @@ export namespace Completer {
   /**
    * A renderer for completer widget nodes.
    */
-  export interface IRenderer<
-    T extends CompletionHandler.ICompletionItem = CompletionHandler.ICompletionItem
-  > {
+  export interface IRenderer {
     /**
      * Create an item node (an `li` element)  from a ICompletionItem
      * for a text completer menu.
      */
-    createCompletionItemNode?(item: T, orderedTypes: string[]): HTMLLIElement;
+    createCompletionItemNode?(
+      item: CompletionHandler.ICompletionItem,
+      orderedTypes: string[]
+    ): HTMLLIElement;
 
     /**
      * Create an item node (an `li` element) for a text completer menu.
@@ -921,7 +874,9 @@ export namespace Completer {
      * Create a documentation node (a `pre` element by default) for
      * documentation panel.
      */
-    createDocumentationNode?(activeItem: T): HTMLElement;
+    createDocumentationNode?(
+      activeItem: CompletionHandler.ICompletionItem
+    ): HTMLElement;
   }
 
   /**
@@ -972,13 +927,9 @@ export namespace Completer {
     createDocumentationNode(
       activeItem: CompletionHandler.ICompletionItem
     ): HTMLElement {
-      const host = document.createElement('div');
-      host.classList.add('jp-RenderedText');
-      const sanitizer = { sanitize: (dirty: string) => dirty };
-      const source = activeItem.documentation || '';
-
-      renderText({ host, sanitizer, source }).catch(console.error);
-      return host;
+      let pre = document.createElement('pre');
+      pre.textContent = activeItem.documentation || '';
+      return pre;
     }
 
     /**

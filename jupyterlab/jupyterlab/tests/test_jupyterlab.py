@@ -89,7 +89,7 @@ class AppHandlerTest(TestCase):
 
         self.data_dir = pjoin(self.test_dir, "data")
         self.config_dir = pjoin(self.test_dir, "config")
-        self.pkg_names = {}
+        self.pkg_names = dict()
 
         # Copy in the mock packages.
         for name in ["extension", "incompat", "package", "mimeextension"]:
@@ -736,7 +736,7 @@ class TestExtension(AppHandlerTest):
         assert installed == [self.pkg_names["extension"]]
 
     def test_update_missing_extension(self):
-        assert update_extension("foo") is False
+        assert False == update_extension("foo")
 
     def test_update_multiple(self):
         installed = []

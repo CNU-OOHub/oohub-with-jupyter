@@ -4,12 +4,9 @@ import os.path as osp
 import shutil
 import subprocess
 import sys
-
-try:
-    from importlib.resources import files
-except ImportError:
-    from importlib_resources import files
 from pathlib import Path
+
+import pkg_resources
 
 try:
     from cookiecutter.main import cookiecutter
@@ -134,8 +131,8 @@ def update_extension(target, branch=DEFAULT_COOKIECUTTER_BRANCH, interactive=Tru
     data["jupyterlab"]["outputDir"] = temp_data["jupyterlab"]["outputDir"]
 
     # Look for resolutions in JupyterLab metadata and upgrade those as well
-    root_jlab_package = files("jupyterlab").joinpath("staging/package.json")
-    with root_jlab_package.open() as fid:
+    root_jlab_package = pkg_resources.resource_filename("jupyterlab", "staging/package.json")
+    with open(root_jlab_package) as fid:
         root_jlab_data = json.load(fid)
 
     data.setdefault("dependencies", dict())
@@ -220,4 +217,4 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    update_extension(args.path, args.branch, args.no_input is False)
+    update_extension(args.path, args.branch, args.no_input == False)

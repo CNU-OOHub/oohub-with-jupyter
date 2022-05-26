@@ -17,7 +17,7 @@ import {
   WidgetTracker
 } from '@jupyterlab/apputils';
 import { ILauncher } from '@jupyterlab/launcher';
-import { IMainMenu } from '@jupyterlab/mainmenu';
+import { IFileMenu, IMainMenu } from '@jupyterlab/mainmenu';
 import { IRunningSessionManagers, IRunningSessions } from '@jupyterlab/running';
 import { Terminal, TerminalAPI } from '@jupyterlab/services';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
@@ -27,7 +27,7 @@ import * as WidgetModuleType from '@jupyterlab/terminal/lib/widget';
 import { ITranslator } from '@jupyterlab/translation';
 import { terminalIcon } from '@jupyterlab/ui-components';
 import { toArray } from '@lumino/algorithm';
-import { Menu, Widget } from '@lumino/widgets';
+import { Menu } from '@lumino/widgets';
 
 /**
  * The command IDs used by the terminal plugin.
@@ -44,8 +44,6 @@ namespace CommandIDs {
   export const decreaseFont = 'terminal:decrease-font';
 
   export const setTheme = 'terminal:set-theme';
-
-  export const shutdown = 'terminal:shut-down';
 }
 
 /**
@@ -216,9 +214,13 @@ function activate(
 
     // Add terminal close-and-shutdown to the file menu.
     mainMenu.fileMenu.closeAndCleaners.add({
-      id: CommandIDs.shutdown,
-      isEnabled: (w: Widget) => tracker.currentWidget !== null && tracker.has(w)
-    });
+      tracker,
+      closeAndCleanupLabel: (n: number) => trans.__('Shutdown Terminal'),
+      closeAndCleanup: (current: MainAreaWidget<ITerminal.ITerminal>) => {
+        // The widget is automatically disposed upon session shutdown.
+        return current.content.session.shutdown();
+      }
+    } as IFileMenu.ICloseAndCleaner<MainAreaWidget<ITerminal.ITerminal>>);
   }
 
   if (palette) {
@@ -371,7 +373,7 @@ export function addCommands(
       term.title.label = '...';
 
       const main = new MainAreaWidget({ content: term });
-      app.shell.add(main, 'main', { type: 'Terminal' });
+      app.shell.add(main);
       void tracker.add(main);
       app.shell.activateById(main.id);
       return main;
@@ -379,7 +381,6 @@ export function addCommands(
   });
 
   commands.addCommand(CommandIDs.open, {
-    label: trans.__('Open a terminal by its `name`.'),
     execute: args => {
       const name = args['name'] as string;
       // Check for a running terminal with the given name.
@@ -413,20 +414,6 @@ export function addCommands(
       } catch (err) {
         Private.showErrorMessage(err);
       }
-    },
-    isEnabled: () => tracker.currentWidget !== null
-  });
-
-  commands.addCommand(CommandIDs.shutdown, {
-    label: trans.__('Shutdown Terminal'),
-    execute: () => {
-      const current = tracker.currentWidget;
-      if (!current) {
-        return;
-      }
-
-      // The widget is automatically disposed upon session shutdown.
-      return current.content.session.shutdown();
     },
     isEnabled: () => tracker.currentWidget !== null
   });
@@ -467,9 +454,6 @@ export function addCommands(
 
   commands.addCommand(CommandIDs.setTheme, {
     label: args => {
-      if (args.theme === undefined) {
-        return trans.__('Set terminal theme to the provided `theme`.');
-      }
       const theme = args['theme'] as string;
       const displayName =
         theme in themeDisplayedName

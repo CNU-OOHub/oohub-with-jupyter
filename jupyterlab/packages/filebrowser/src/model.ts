@@ -11,7 +11,6 @@ import {
   nullTranslator,
   TranslationBundle
 } from '@jupyterlab/translation';
-import { IScore } from '@jupyterlab/ui-components';
 import {
   ArrayExt,
   ArrayIterator,
@@ -104,7 +103,7 @@ export class FileBrowserModel implements IDisposable {
         backoff: true,
         max: 300 * 1000
       },
-      standby: options.refreshStandby || 'when-hidden'
+      standby: 'when-hidden'
     });
   }
 
@@ -705,11 +704,6 @@ export namespace FileBrowserModel {
     refreshInterval?: number;
 
     /**
-     * When the model stops polling the API. Defaults to `when-hidden`.
-     */
-    refreshStandby?: Poll.Standby | (() => boolean | Poll.Standby);
-
-    /**
      * An optional state database. If provided, the model will restore which
      * folder was last opened when it is restored.
      */
@@ -774,22 +768,7 @@ export namespace TogglableHiddenFileBrowserModel {
 export class FilterFileBrowserModel extends TogglableHiddenFileBrowserModel {
   constructor(options: FilterFileBrowserModel.IOptions) {
     super(options);
-    this._filter =
-      options.filter ??
-      (model => {
-        return {};
-      });
-    this._filterDirectories = options.filterDirectories ?? true;
-  }
-
-  /**
-   * Whether to filter directories.
-   */
-  get filterDirectories(): boolean {
-    return this._filterDirectories;
-  }
-  set filterDirectories(value: boolean) {
-    this._filterDirectories = value;
+    this._filter = options.filter ? options.filter : model => true;
   }
 
   /**
@@ -799,23 +778,20 @@ export class FilterFileBrowserModel extends TogglableHiddenFileBrowserModel {
    */
   items(): IIterator<Contents.IModel> {
     return filter(super.items(), (value, index) => {
-      if (!this._filterDirectories && value.type === 'directory') {
+      if (value.type === 'directory') {
         return true;
       } else {
-        const filtered = this._filter(value);
-        value.indices = filtered?.indices;
-        return !!filtered;
+        return this._filter(value);
       }
     });
   }
 
-  setFilter(filter: (value: Contents.IModel) => Partial<IScore> | null): void {
+  setFilter(filter: (value: Contents.IModel) => boolean) {
     this._filter = filter;
     void this.refresh();
   }
 
-  private _filter: (value: Contents.IModel) => Partial<IScore> | null;
-  private _filterDirectories: boolean;
+  private _filter: (value: Contents.IModel) => boolean;
 }
 
 /**
@@ -829,11 +805,6 @@ export namespace FilterFileBrowserModel {
     /**
      * Filter function on file browser item model
      */
-    filter?: (value: Contents.IModel) => Partial<IScore> | null;
-
-    /**
-     * Filter directories
-     */
-    filterDirectories?: boolean;
+    filter?: (value: Contents.IModel) => boolean;
   }
 }

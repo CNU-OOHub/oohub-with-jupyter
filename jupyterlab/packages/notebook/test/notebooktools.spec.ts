@@ -183,17 +183,13 @@ describe('@jupyterlab/notebook', () => {
       describe('#addItem()', () => {
         it('should add a cell tool item', () => {
           const tool = new NotebookTools.Tool();
-          expect(() => {
-            notebookTools.addItem({ tool });
-          }).not.toThrow();
+          notebookTools.addItem({ tool });
           tool.dispose();
         });
 
         it('should accept a rank', () => {
           const tool = new NotebookTools.Tool();
-          expect(() => {
-            notebookTools.addItem({ tool, rank: 100 });
-          }).not.toThrow();
+          notebookTools.addItem({ tool, rank: 100 });
           tool.dispose();
         });
       });

@@ -167,7 +167,8 @@ test('Open language menu', async ({ page }) => {
     if (request.method() === 'GET') {
       return route.fulfill({
         status: 200,
-        body: '{"data": {"en": {"displayName": "English", "nativeName": "English"}}, "message": ""}'
+        body:
+          '{"data": {"en": {"displayName": "English", "nativeName": "English"}}, "message": ""}'
       });
     } else {
       return route.continue();
@@ -394,7 +395,7 @@ Benchmark of JupyterLab is done using Playwright. The actions measured are:
 Two files are tested: a notebook with many code cells and another with many markdown cells.
 
 The test is run on the CI by comparing the result in the commit at which a PR branch started and the PR branch head on
-the same CI job to ensure using the same hardware.
+the same CI job to ensure using the same hardware.  
 The benchmark job is triggered on:
 
 - Approved PR review
@@ -415,7 +416,7 @@ A special report will be generated in the folder `benchmark-results` that will c
 - `lab-benchmark.vl.json`: The [_Vega-Lite_](https://vega.github.io/vega-lite) description used to produce the PNG file.
 
 The reference, tagged _expected_, is stored in `lab-benchmark-expected.json`. It can be
-created using the `-u` option of Playwright; i.e. `jlpm run test:benchmark -u`.
+updated using the `-u` option of Playwright; i.e. `jlpm run test:benchmark -u`.
 
 ### Benchmark parameters
 

@@ -1,7 +1,5 @@
 # project files
 coverage/
-.eslintcache
-.stylelintcache
 
 dev_mode/listings
 dev_mode/schemas
@@ -11,7 +9,6 @@ dev_mode/workspaces
 dev_mode/stats.json
 
 docs/_build
-docs/source/user/commands_list.md
 docs/api
 **/docs/source/_build
 
@@ -59,6 +56,7 @@ node_modules
 *.tsbuildinfo
 lerna-debug.log
 yarn-error.log
+storybook-static
 
 # python
 .cache
@@ -122,7 +120,7 @@ junit.xml
 # ms IDE stuff
 *.code-workspace
 .history
-.vscode/*
-!.vscode/extension.json
+.vscode
+.vs
 
 .jupyter_releaser_checkout

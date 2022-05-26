@@ -21,7 +21,6 @@
   margin-top: -1px;
   outline: none;
   color: var(--jp-content-font-color1) !important;
-
   /* This is needed so that all font sizing of children done in ems is
    * relative to this base size */
   font-size: var(--jp-ui-font-size1);
@@ -463,7 +462,7 @@ ul.jp-PluginList li.jp-mod-selected span.jp-PluginList-icon.jp-FileIcon {
 }
 
 .jp-PluginList .jp-FilterBox {
-  margin: 8px 12px 0;
+  margin: 8px 12px 0px 12px;
 }
 
 .jp-PluginList mark {

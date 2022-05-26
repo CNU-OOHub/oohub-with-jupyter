@@ -2,16 +2,17 @@
 // Distributed under the terms of the Modified BSD License.
 
 import { IRankedMenu, RankedMenu } from '@jupyterlab/ui-components';
-import { SemanticCommand } from '@jupyterlab/apputils';
+import { Widget } from '@lumino/widgets';
+import { IMenuExtender } from './tokens';
 
 /**
  * An interface for a View menu.
  */
 export interface IViewMenu extends IRankedMenu {
   /**
-   * Semantic commands IEditorViewer for the View menu.
+   * A set storing IKernelUsers for the Kernel menu.
    */
-  readonly editorViewers: IViewMenu.IEditorViewer;
+  readonly editorViewers: Set<IViewMenu.IEditorViewer<Widget>>;
 }
 
 /**
@@ -23,17 +24,21 @@ export class ViewMenu extends RankedMenu implements IViewMenu {
    */
   constructor(options: IRankedMenu.IOptions) {
     super(options);
-    this.editorViewers = {
-      toggleLineNumbers: new SemanticCommand(),
-      toggleMatchBrackets: new SemanticCommand(),
-      toggleWordWrap: new SemanticCommand()
-    };
+    this.editorViewers = new Set<IViewMenu.IEditorViewer<Widget>>();
   }
 
   /**
-   * Semantic commands IEditorViewer for the View menu.
+   * A set storing IEditorViewers for the View menu.
    */
-  readonly editorViewers: IViewMenu.IEditorViewer;
+  readonly editorViewers: Set<IViewMenu.IEditorViewer<Widget>>;
+
+  /**
+   * Dispose of the resources held by the view menu.
+   */
+  dispose(): void {
+    this.editorViewers.clear();
+    super.dispose();
+  }
 }
 
 /**
@@ -42,22 +47,37 @@ export class ViewMenu extends RankedMenu implements IViewMenu {
 export namespace IViewMenu {
   /**
    * Interface for a text editor viewer to register
-   * itself with the text editor semantic commands.
+   * itself with the text editor extension points.
    */
-  export interface IEditorViewer {
+  export interface IEditorViewer<T extends Widget> extends IMenuExtender<T> {
     /**
-     * A semantic command to show line numbers in the editor.
+     * Whether to show line numbers in the editor.
      */
-    toggleLineNumbers: SemanticCommand;
+    toggleLineNumbers?: (widget: T) => void;
 
     /**
-     * A semantic command to word-wrap the editor.
+     * Whether to word-wrap the editor.
      */
-    toggleWordWrap: SemanticCommand;
+    toggleWordWrap?: (widget: T) => void;
 
     /**
-     * A semantic command to match brackets in the editor.
+     * Whether to match brackets in the editor.
      */
-    toggleMatchBrackets: SemanticCommand;
+    toggleMatchBrackets?: (widget: T) => void;
+
+    /**
+     * Whether line numbers are toggled.
+     */
+    lineNumbersToggled?: (widget: T) => boolean;
+
+    /**
+     * Whether word wrap is toggled.
+     */
+    wordWrapToggled?: (widget: T) => boolean;
+
+    /**
+     * Whether match brackets is toggled.
+     */
+    matchBracketsToggled?: (widget: T) => boolean;
   }
 }

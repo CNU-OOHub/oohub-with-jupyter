@@ -1,6 +1,7 @@
 // Copyright (c) Jupyter Development Team.
 // Distributed under the terms of the Modified BSD License.
 
+import { VDomModel, VDomRenderer } from '@jupyterlab/apputils';
 import {
   IContentChange,
   ILogger,
@@ -8,7 +9,7 @@ import {
 } from '@jupyterlab/logconsole';
 import { GroupItem, interactiveItem, TextItem } from '@jupyterlab/statusbar';
 import { ITranslator, nullTranslator } from '@jupyterlab/translation';
-import { listIcon, VDomModel, VDomRenderer } from '@jupyterlab/ui-components';
+import { listIcon } from '@jupyterlab/ui-components';
 import { Signal } from '@lumino/signaling';
 import React from 'react';
 
@@ -99,7 +100,7 @@ export class LogConsoleStatus extends VDomRenderer<LogConsoleStatus.Model> {
   /**
    * Render the log console status item.
    */
-  render(): JSX.Element | null {
+  render() {
     if (this.model === null || this.model.version === 0) {
       return null;
     }
@@ -269,7 +270,7 @@ export namespace LogConsoleStatus {
      * This will also update the last notified version so that the last
      * notified version is always at least the last displayed version.
      */
-    sourceDisplayed(source: string | null, version: number | null): void {
+    sourceDisplayed(source: string | null, version: number | null) {
       if (source === null || version === null) {
         return;
       }
@@ -294,7 +295,7 @@ export namespace LogConsoleStatus {
      * @param source - The name of the log source.
      * @param version - The version of the log.
      */
-    sourceNotified(source: string | null, version: number): void {
+    sourceNotified(source: string | null, version: number) {
       if (source === null) {
         return;
       }

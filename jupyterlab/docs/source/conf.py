@@ -21,16 +21,12 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
-import json
+import os
+import os.path as osp
 import shutil
-import time
-from collections import ChainMap
-from functools import partial
-from pathlib import Path
 from subprocess import check_call
-from typing import List
 
-HERE = Path(__file__).parent.resolve()
+HERE = osp.abspath(osp.dirname(__file__))
 
 # -- General configuration ------------------------------------------------
 
@@ -41,12 +37,7 @@ HERE = Path(__file__).parent.resolve()
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = [
-    "myst_parser",
-    "sphinx.ext.intersphinx",
-    "sphinx.ext.mathjax",
-    "sphinx_copybutton",
-]
+extensions = ["myst_parser", "sphinx.ext.intersphinx", "sphinx.ext.mathjax", "sphinx_copybutton"]
 
 myst_enable_extensions = ["html_image"]
 myst_heading_anchors = 3
@@ -64,7 +55,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "JupyterLab"
-copyright = f"2018-{time.localtime().tm_year}, Project Jupyter"
+copyright = "2018, Project Jupyter"
 author = "Project Jupyter"
 
 
@@ -72,13 +63,14 @@ author = "Project Jupyter"
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 
-_version_py = HERE.parent.parent / "jupyterlab" / "_version.py"
+_version_py = osp.join(HERE, "..", "..", "jupyterlab", "_version.py")
 version_ns = {}
 
-exec(_version_py.read_text(), version_ns)
+with open(_version_py, mode="r") as version_file:
+    exec(version_file.read(), version_ns)
 
 # The short X.Y version.
-version = "{0:d}.{1:d}".format(*version_ns["version_info"])
+version = "%i.%i" % version_ns["version_info"][:2]
 # The full version, including alpha/beta/rc tags.
 release = version_ns["__version__"]
 
@@ -87,10 +79,8 @@ release = version_ns["__version__"]
 # for a list of supported languages.
 #
 # This is also used if you do content translation via gettext catalogs.
-# language = None # Must be set from the command line to generate various languages
-
-locale_dirs = ["locale/"]
-gettext_compact = False
+# Usually you set "language" from the command line for these cases.
+language = None
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -102,31 +92,31 @@ todo_include_todos = False
 
 
 # build js docs and stage them to the build directory
-def build_api_docs(out_dir: Path):
+def build_api_docs(out_dir):
     """build js api docs"""
-    docs = HERE.parent
-    root = docs.parent
-    docs_api = docs / "api"
-    api_index = docs_api / "index.html"
+    docs = osp.join(HERE, os.pardir)
+    root = osp.join(docs, os.pardir)
+    docs_api = osp.join(docs, "api")
+    api_index = osp.join(docs_api, "index.html")
     # is this an okay way to specify jlpm
     # without installing jupyterlab first?
-    jlpm = ["node", str(root / "jupyterlab" / "staging" / "yarn.js")]
+    jlpm = ["node", osp.join(root, "jupyterlab", "staging", "yarn.js")]
 
-    if api_index.exists():
+    if osp.exists(api_index):
         # avoid rebuilding docs because it takes forever
         # `make clean` to force a rebuild
-        print(f"already have {api_index!s}")
+        print(f"already have {api_index}")
     else:
         print("Building jupyterlab API docs")
-        check_call(jlpm, cwd=str(root))
-        check_call(jlpm + ["build:packages"], cwd=str(root))
-        check_call(jlpm + ["docs"], cwd=str(root))
+        check_call(jlpm, cwd=root)
+        check_call(jlpm + ["build:packages"], cwd=root)
+        check_call(jlpm + ["docs"], cwd=root)
 
-    dest_dir = out_dir / "api"
-    print(f"Copying {docs_api!s} -> {dest_dir!s}")
-    if dest_dir.exists():
-        shutil.rmtree(str(dest_dir))
-    shutil.copytree(str(docs_api), str(dest_dir))
+    dest_dir = osp.join(out_dir, "api")
+    print(f"Copying {docs_api} -> {dest_dir}")
+    if osp.exists(dest_dir):
+        shutil.rmtree(dest_dir)
+    shutil.copytree(docs_api, dest_dir)
 
 
 # Copy frontend files for snippet inclusion
@@ -136,83 +126,16 @@ FILES_LIST = [  # File paths should be relative to jupyterlab root folder
 SNIPPETS_FOLDER = "snippets"
 
 
-def copy_code_files(temp_folder: Path):
+def copy_code_files(temp_folder):
     """Copy files in the temp_folder"""
-    docs = HERE.parent
-    root = docs.parent
+    docs = osp.join(HERE, os.pardir)
+    root = osp.join(docs, os.pardir)
 
     for file in FILES_LIST:
-        target = temp_folder / file
-        if not target.parent.exists():
-            target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(str(root / file), str(target))
-
-        # Split plugin schema to ease documentation maintenance
-        if file == "packages/settingregistry/src/plugin-schema.json":
-            schema = json.loads(Path(target).read_text())
-
-            partial_schema = ChainMap(schema.get("definitions", {}), schema.get("properties", {}))
-            for key in partial_schema:
-                fragment = target.parent / f"{key}.json"
-                with fragment.open("w") as f:
-                    json.dump({key: partial_schema[key]}, f, indent=2)
-
-
-IMAGES_FOLDER = "images"
-AUTOMATED_SCREENSHOTS_FOLDER = "galata/test/documentation"
-
-
-def copy_automated_screenshots(temp_folder: Path) -> List[Path]:
-    """Copy PlayWright automated screenshots in documentation folder.
-
-    Args:
-        temp_folder: Target directory in which to copy the file
-    Returns:
-        List of copied files
-    """
-    print(f"\n\n{temp_folder}\n")
-    docs = HERE.parent
-    root = docs.parent
-
-    src = root / AUTOMATED_SCREENSHOTS_FOLDER
-
-    copied_files = []
-    for img in src.rglob("*.png"):
-        target = temp_folder / (img.name.replace("-documentation-linux", ""))
-        shutil.copyfile(str(img), str(target))
-        copied_files.append(target)
-
-    return copied_files
-
-
-COMMANDS_LIST_PATH = "commands.test.ts-snapshots/commandsList-documentation-linux.json"
-COMMANDS_LIST_DOC = "user/commands_list.md"
-
-
-def document_commands_list(temp_folder: Path) -> None:
-    """Generate the command list documentation page for application extraction."""
-    list_path = HERE.parent.parent / AUTOMATED_SCREENSHOTS_FOLDER / COMMANDS_LIST_PATH
-
-    commands_list = json.loads(list_path.read_text())
-
-    template = """| Command id | Label | Shortcuts |
-| ---------- | ----- | --------- |
-"""
-
-    for command in sorted(commands_list, key=lambda c: c["id"]):
-        for key in ("id", "label", "caption"):
-            if key not in command:
-                command[key] = ""
-            else:
-                command[key] = command[key].replace("\n", " ")
-        shortcuts = command.get("shortcuts", [])
-        command["shortcuts"] = (
-            "<kbd>" + "</kbd>, <kbd>".join(shortcuts) + "</kbd>" if len(shortcuts) else ""
-        )
-
-        template += "| `{id}` | {label} | {shortcuts} |\n".format(**command)
-
-    (temp_folder / COMMANDS_LIST_DOC).write_text(template)
+        target = osp.join(temp_folder, file)
+        if not osp.exists(osp.dirname(target)):
+            os.makedirs(osp.dirname(target), exist_ok=True)
+        shutil.copyfile(osp.join(root, file), target)
 
 
 # -- Options for HTML output ----------------------------------------------
@@ -220,42 +143,16 @@ def document_commands_list(temp_folder: Path) -> None:
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "pydata_sphinx_theme"
-html_logo = "_static/logo-rectangle.svg"
-html_favicon = "_static/logo-icon.png"
+import sphinx_rtd_theme
+
+html_theme = "sphinx_rtd_theme"
+html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
-html_theme_options = {
-    "icon_links": [
-        {
-            "name": "jupyter.org",
-            "url": "https://jupyter.org",
-            "icon": "_static/jupyter_logo.svg",
-            "type": "local",
-        },
-        {
-            "name": "GitHub",
-            "url": "https://github.com/jupyterlab/jupyterlab",
-            "icon": "fab fa-github-square",
-        },
-        {
-            "name": "Discourse",
-            "url": "https://discourse.jupyter.org/c/jupyterlab/17",
-            "icon": "fab fa-discourse",
-        },
-        {
-            "name": "Gitter",
-            "url": "https://gitter.im/jupyterlab/jupyterlab",
-            "icon": "fab fa-gitter",
-        },
-    ],
-    "use_edit_page_button": True,
-    "navbar_align": "left",
-    "navbar_end": ["navbar-icon-links.html", "search-field.html"],
-    "footer_items": ["copyright.html"],
-}
+# html_theme_options = {}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -268,15 +165,21 @@ html_static_path = ["_static"]
 # This is required for the alabaster theme
 # refs: http://alabaster.readthedocs.io/en/latest/installation.html#sidebars
 html_sidebars = {
-    "index": [],  # Home page has no sidebar so there's more room for content
-    "**": ["sidebar-nav-bs.html"],
+    "**": [
+        "about.html",
+        "navigation.html",
+        "relations.html",  # needs 'show_related': True theme option to display
+        "searchbox.html",
+        "donate.html",
+    ]
 }
 
 # Output for github to be used in links
 html_context = {
+    "display_github": True,  # Integrate GitHub
     "github_user": "jupyterlab",  # Username
     "github_repo": "jupyterlab",  # Repo name
-    "github_version": "master",  # Version
+    "github_version": "3.4.x",  # Version
     "conf_py_path": "/docs/source/",  # Path in the checkout to the docs root
 }
 
@@ -307,13 +210,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (
-        master_doc,
-        "JupyterLab.tex",
-        "JupyterLab Documentation",
-        "Project Jupyter",
-        "manual",
-    ),
+    (master_doc, "JupyterLab.tex", "JupyterLab Documentation", "Project Jupyter", "manual"),
 ]
 
 
@@ -368,27 +265,18 @@ intersphinx_mapping = {"https://docs.python.org/": None}
 
 
 def setup(app):
-    dest = HERE / "getting_started/changelog.md"
-    shutil.copy(str(HERE.parent.parent / "CHANGELOG.md"), str(dest))
+    dest = osp.join(HERE, "getting_started/changelog.md")
+    shutil.copy(osp.join(HERE, "..", "..", "CHANGELOG.md"), dest)
     app.add_css_file("css/custom.css")  # may also be an URL
-    # Skip we are dealing with internationalization
-    outdir = Path(app.outdir)
-    if outdir.name != "gettext":
-        build_api_docs(outdir)
+    build_api_docs(app.outdir)
 
-    copy_code_files(Path(app.srcdir) / SNIPPETS_FOLDER)
-    tmp_files = copy_automated_screenshots(Path(app.srcdir) / IMAGES_FOLDER)
+    copy_code_files(osp.join(app.srcdir, SNIPPETS_FOLDER))
 
-    def clean_code_files(tmp_files, app, exception):
+    def clean_code_files(app, exception):
         """Remove temporary folder."""
         try:
-            shutil.rmtree(str(Path(app.srcdir) / SNIPPETS_FOLDER))
+            shutil.rmtree(osp.join(app.srcdir, SNIPPETS_FOLDER))
         except Exception as e:
             print(f"Fail to remove temporary snippet folder: {e}")
 
-        for f in tmp_files:
-            f.unlink()
-
-    document_commands_list(Path(app.srcdir))
-
-    app.connect("build-finished", partial(clean_code_files, tmp_files))
+    app.connect("build-finished", clean_code_files)

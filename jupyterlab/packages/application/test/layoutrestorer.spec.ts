@@ -40,7 +40,7 @@ describe('apputils', () => {
         });
         const promise = restorer.restored;
         ready.resolve(void 0);
-        await expect(promise).resolves.not.toThrow();
+        await promise;
       });
     });
 
@@ -56,20 +56,9 @@ describe('apputils', () => {
         const dehydrated: ILabShell.ILayout = {
           mainArea: { currentWidget, dock: null },
           downArea: { currentWidget: null, widgets: null, size: null },
-          leftArea: {
-            collapsed: true,
-            currentWidget: null,
-            widgets: null,
-            visible: false
-          },
-          rightArea: {
-            collapsed: true,
-            currentWidget: null,
-            widgets: null,
-            visible: false
-          },
-          relativeSizes: null,
-          topArea: { simpleVisibility: true }
+          leftArea: { collapsed: true, currentWidget: null, widgets: null },
+          rightArea: { collapsed: true, currentWidget: null, widgets: null },
+          relativeSizes: null
         };
         restorer.add(currentWidget, 'test-one');
         ready.resolve(void 0);
@@ -90,20 +79,9 @@ describe('apputils', () => {
         const dehydrated: ILabShell.ILayout = {
           mainArea: { currentWidget: null, dock: null },
           downArea: { currentWidget, widgets: null, size: null },
-          leftArea: {
-            collapsed: true,
-            currentWidget: null,
-            widgets: null,
-            visible: false
-          },
-          rightArea: {
-            collapsed: true,
-            currentWidget: null,
-            widgets: null,
-            visible: false
-          },
-          relativeSizes: null,
-          topArea: { simpleVisibility: true }
+          leftArea: { collapsed: true, currentWidget: null, widgets: null },
+          rightArea: { collapsed: true, currentWidget: null, widgets: null },
+          relativeSizes: null
         };
         restorer.add(currentWidget, 'test-one');
         ready.resolve(void 0);
@@ -141,17 +119,10 @@ describe('apputils', () => {
           leftArea: {
             currentWidget,
             collapsed: true,
-            widgets: [currentWidget],
-            visible: true
+            widgets: [currentWidget]
           },
-          rightArea: {
-            collapsed: true,
-            currentWidget: null,
-            widgets: null,
-            visible: false
-          },
-          relativeSizes: null,
-          topArea: { simpleVisibility: true }
+          rightArea: { collapsed: true, currentWidget: null, widgets: null },
+          relativeSizes: null
         };
         restorer.add(currentWidget, 'test-one');
         ready.resolve(void 0);
@@ -204,20 +175,9 @@ describe('apputils', () => {
         const dehydrated: ILabShell.ILayout = {
           mainArea: { currentWidget: null, dock: null },
           downArea: { currentWidget: null, widgets: null, size: null },
-          leftArea: {
-            currentWidget: null,
-            collapsed: true,
-            widgets: null,
-            visible: false
-          },
-          rightArea: {
-            collapsed: true,
-            currentWidget: null,
-            widgets: null,
-            visible: false
-          },
-          relativeSizes: null,
-          topArea: { simpleVisibility: true }
+          leftArea: { currentWidget: null, collapsed: true, widgets: null },
+          rightArea: { collapsed: true, currentWidget: null, widgets: null },
+          relativeSizes: null
         };
 
         await expect(restorer.save(dehydrated)).rejects.toBe(
@@ -241,17 +201,10 @@ describe('apputils', () => {
           leftArea: {
             currentWidget,
             collapsed: true,
-            widgets: [currentWidget],
-            visible: true
+            widgets: [currentWidget]
           },
-          rightArea: {
-            collapsed: true,
-            currentWidget: null,
-            widgets: null,
-            visible: false
-          },
-          relativeSizes: null,
-          topArea: { simpleVisibility: true }
+          rightArea: { collapsed: true, currentWidget: null, widgets: null },
+          relativeSizes: null
         };
         restorer.add(currentWidget, 'test-one');
         ready.resolve(void 0);

@@ -16,15 +16,13 @@ import {
   IMarkdownViewerTracker,
   MarkdownDocument,
   MarkdownViewer,
-  MarkdownViewerFactory,
-  MarkdownViewerTableOfContentsFactory
+  MarkdownViewerFactory
 } from '@jupyterlab/markdownviewer';
 import {
   IRenderMimeRegistry,
   markdownRendererFactory
 } from '@jupyterlab/rendermime';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
-import { ITableOfContentsRegistry } from '@jupyterlab/toc';
 import { ITranslator } from '@jupyterlab/translation';
 
 /**
@@ -48,7 +46,7 @@ const plugin: JupyterFrontEndPlugin<IMarkdownViewerTracker> = {
   id: '@jupyterlab/markdownviewer-extension:plugin',
   provides: IMarkdownViewerTracker,
   requires: [IRenderMimeRegistry, ITranslator],
-  optional: [ILayoutRestorer, ISettingRegistry, ITableOfContentsRegistry],
+  optional: [ILayoutRestorer, ISettingRegistry],
   autoStart: true
 };
 
@@ -60,8 +58,7 @@ function activate(
   rendermime: IRenderMimeRegistry,
   translator: ITranslator,
   restorer: ILayoutRestorer | null,
-  settingRegistry: ISettingRegistry | null,
-  tocRegistry: ITableOfContentsRegistry | null
+  settingRegistry: ISettingRegistry | null
 ): IMarkdownViewerTracker {
   const trans = translator.load('jupyterlab');
   const { commands, docRegistry } = app;
@@ -113,7 +110,6 @@ function activate(
   const factory = new MarkdownViewerFactory({
     rendermime,
     name: FACTORY,
-    label: trans.__('Markdown Preview'),
     primaryFileType: docRegistry.getFileType('markdown'),
     fileTypes: ['markdown'],
     defaultRendered: ['markdown']
@@ -176,15 +172,6 @@ function activate(
     },
     label: trans.__('Show Markdown Editor')
   });
-
-  if (tocRegistry) {
-    tocRegistry.add(
-      new MarkdownViewerTableOfContentsFactory(
-        tracker,
-        rendermime.markdownParser
-      )
-    );
-  }
 
   return tracker;
 }

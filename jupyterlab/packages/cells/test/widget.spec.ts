@@ -32,7 +32,6 @@ import {
   JupyterServer,
   NBTestUtils
 } from '@jupyterlab/testutils';
-import { IExecuteReplyMsg } from '../../services/lib/kernel/messages';
 
 const RENDERED_CLASS = 'jp-mod-rendered';
 const rendermime = NBTestUtils.defaultRenderMime();
@@ -744,9 +743,7 @@ describe('cells/widget', () => {
       it('should fulfill a promise if there is no code to execute', async () => {
         const widget = new CodeCell({ model, rendermime, contentFactory });
         widget.initializeState();
-        await expect(
-          CodeCell.execute(widget, sessionContext)
-        ).resolves.not.toThrow();
+        await CodeCell.execute(widget, sessionContext);
       });
 
       it('should fulfill a promise if there is code to execute', async () => {
@@ -796,9 +793,12 @@ describe('cells/widget', () => {
         const msg = await future2;
         expect(msg).not.toBeUndefined();
 
-        expect(widget.promptNode.textContent).toEqual(
-          `[${(msg as IExecuteReplyMsg).content.execution_count}]:`
-        );
+        // The `if` is a Typescript type guard so that msg.content works below.
+        if (msg) {
+          expect(widget.promptNode.textContent).toEqual(
+            `[${msg.content.execution_count}]:`
+          );
+        }
       });
     });
   });

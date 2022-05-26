@@ -40,14 +40,23 @@ export interface IRankedMenu extends IDisposable {
    *
    * @param options - The options for creating the menu item.
    *
-   * @returns The disposable menu item added to the menu.
+   * @returns The menu item added to the menu.
+   *
+   * @deprecated It will return a `IDisposable` object in v4
    */
-  addItem(options: IRankedMenu.IItemOptions): IDisposable;
+  addItem(options: IRankedMenu.IItemOptions): Menu.IItem;
 
   /**
    * A read-only array of the menu items in the menu.
    */
   readonly items: ReadonlyArray<Menu.IItem>;
+
+  /**
+   * The underlying Lumino menu.
+   *
+   * @deprecated will be removed in v4
+   */
+  readonly menu: Menu;
 
   /**
    * Menu rank

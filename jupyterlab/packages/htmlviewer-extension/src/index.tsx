@@ -76,10 +76,10 @@ function activateHTMLViewer(
   const trans = translator.load('jupyterlab');
 
   if (toolbarRegistry) {
-    toolbarRegistry.addFactory<HTMLViewer>(FACTORY, 'refresh', widget =>
+    toolbarRegistry.registerFactory<HTMLViewer>(FACTORY, 'refresh', widget =>
       ToolbarItems.createRefreshButton(widget, translator)
     );
-    toolbarRegistry.addFactory<HTMLViewer>(FACTORY, 'trust', widget =>
+    toolbarRegistry.registerFactory<HTMLViewer>(FACTORY, 'trust', widget =>
       ToolbarItems.createTrustButton(widget, translator)
     );
 
@@ -109,7 +109,6 @@ function activateHTMLViewer(
   // Create a new viewer factory.
   const factory = new HTMLViewerFactory({
     name: FACTORY,
-    label: trans.__('HTML Viewer'),
     fileTypes: ['html'],
     defaultFor: ['html'],
     readOnly: true,
@@ -170,7 +169,7 @@ function activateHTMLViewer(
     execute: () => {
       const current = tracker.currentWidget;
       if (!current) {
-        return;
+        return false;
       }
       current.trusted = !current.trusted;
     }

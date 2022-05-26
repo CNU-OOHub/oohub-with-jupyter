@@ -11,11 +11,10 @@ import {
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
 import { ICommandPalette, MainAreaWidget } from '@jupyterlab/apputils';
-import { FileBrowserModel, IFileBrowserFactory } from '@jupyterlab/filebrowser';
 import { ILauncher, Launcher, LauncherModel } from '@jupyterlab/launcher';
 import { ITranslator } from '@jupyterlab/translation';
-import { addIcon, launcherIcon } from '@jupyterlab/ui-components';
-import { find, toArray } from '@lumino/algorithm';
+import { launcherIcon } from '@jupyterlab/ui-components';
+import { toArray } from '@lumino/algorithm';
 import { JSONObject } from '@lumino/coreutils';
 import { DockPanel, TabBar, Widget } from '@lumino/widgets';
 
@@ -33,7 +32,7 @@ const plugin: JupyterFrontEndPlugin<ILauncher> = {
   activate,
   id: '@jupyterlab/launcher-extension:plugin',
   requires: [ITranslator],
-  optional: [ILabShell, ICommandPalette, IFileBrowserFactory],
+  optional: [ILabShell, ICommandPalette],
   provides: ILauncher,
   autoStart: true
 };
@@ -50,8 +49,7 @@ function activate(
   app: JupyterFrontEnd,
   translator: ITranslator,
   labShell: ILabShell | null,
-  palette: ICommandPalette | null,
-  factory: IFileBrowserFactory | null
+  palette: ICommandPalette | null
 ): ILauncher {
   const { commands, shell } = app;
   const trans = translator.load('jupyterlab');
@@ -59,17 +57,11 @@ function activate(
 
   commands.addCommand(CommandIDs.create, {
     label: trans.__('New Launcher'),
-    icon: args => (args.toolbar ? addIcon : undefined),
     execute: (args: JSONObject) => {
-      const cwd =
-        (args['cwd'] as string) ?? factory?.defaultBrowser.model.path ?? '';
+      const cwd = args['cwd'] ? String(args['cwd']) : '';
       const id = `launcher-${Private.id++}`;
       const callback = (item: Widget) => {
-        // If widget is attached to the main area replace the launcher
-        if (find(shell.widgets('main'), w => w === item)) {
-          shell.add(item, 'main', { ref: id });
-          launcher.dispose();
-        }
+        shell.add(item, 'main', { ref: id });
       };
       const launcher = new Launcher({
         model,
@@ -101,38 +93,9 @@ function activate(
         }, main);
       }
 
-      if (factory) {
-        const onPathChanged = (model: FileBrowserModel) => {
-          launcher.cwd = model.path;
-        };
-        factory.defaultBrowser.model.pathChanged.connect(onPathChanged);
-        launcher.disposed.connect(() => {
-          factory.defaultBrowser.model.pathChanged.disconnect(onPathChanged);
-        });
-      }
-
       return main;
     }
   });
-
-  if (labShell) {
-    void Promise.all([
-      app.restored,
-      factory?.defaultBrowser.model.restored
-    ]).then(() => {
-      function maybeCreate() {
-        // Create a launcher if there are no open items.
-        if (labShell!.isEmpty('main')) {
-          commands.execute(CommandIDs.create);
-        }
-      }
-      maybeCreate();
-      // When layout is modified, create a launcher if there are no open items.
-      labShell.layoutModified.connect(() => {
-        maybeCreate();
-      });
-    });
-  }
 
   if (palette) {
     palette.addItem({
@@ -148,7 +111,10 @@ function activate(
       const ref =
         arg.currentTitle?.owner.id ||
         arg.titles[arg.titles.length - 1].owner.id;
-
+      if (commands.hasCommand('filebrowser:create-main-launcher')) {
+        // If a file browser is defined connect the launcher to it
+        return commands.execute('filebrowser:create-main-launcher', { ref });
+      }
       return commands.execute(CommandIDs.create, { ref });
     });
   }

@@ -1,10 +1,10 @@
 // Copyright (c) Jupyter Development Team.
 // Distributed under the terms of the Modified BSD License.
 
+import { VDomModel, VDomRenderer } from '@jupyterlab/apputils';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { TextItem } from '@jupyterlab/statusbar';
 import { ITranslator, nullTranslator } from '@jupyterlab/translation';
-import { VDomModel, VDomRenderer } from '@jupyterlab/ui-components';
 import { Widget } from '@lumino/widgets';
 import React from 'react';
 import { IDocumentManager } from './tokens';
@@ -64,7 +64,7 @@ export class SavingStatus extends VDomRenderer<SavingStatus.Model> {
   /**
    * Render the SavingStatus item.
    */
-  render(): JSX.Element | null {
+  render() {
     if (this.model === null || this.model.status === null) {
       return null;
     } else {
@@ -110,7 +110,7 @@ export namespace SavingStatus {
      * but it only has any effect if the widget is an IDocument widget
      * known to the application document manager.
      */
-    get widget(): Widget | null {
+    get widget() {
       return this._widget;
     }
     set widget(widget: Widget | null) {

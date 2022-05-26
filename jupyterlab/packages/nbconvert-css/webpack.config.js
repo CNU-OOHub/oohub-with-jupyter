@@ -5,8 +5,7 @@ module.exports = {
   entry: './raw.js',
   output: {
     filename: 'index.js',
-    path: path.resolve(__dirname, 'style'),
-    hashFunction: 'sha256'
+    path: path.resolve(__dirname, 'style')
   },
   plugins: [
     new MiniCssExtractPlugin({
@@ -21,7 +20,7 @@ module.exports = {
       },
       {
         test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,
-        type: 'asset/inline'
+        use: 'url-loader'
       },
       /* Use null-loader to drop resources that are not used in the CSS */
       {

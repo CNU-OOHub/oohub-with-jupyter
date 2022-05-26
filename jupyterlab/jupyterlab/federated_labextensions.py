@@ -14,11 +14,6 @@ import platform
 import shutil
 import subprocess
 import sys
-
-try:
-    from importlib.metadata import PackageNotFoundError, version
-except ImportError:
-    from importlib_metadata import PackageNotFoundError, version
 from os.path import basename
 from os.path import join as pjoin
 from os.path import normpath
@@ -130,7 +125,7 @@ def develop_labextension(
 
     elif os.path.isdir(path):
         path = pjoin(os.path.abspath(path), "")  # end in path separator
-        for parent, _, files in os.walk(path):
+        for parent, dirs, files in os.walk(path):
             dest_dir = pjoin(full_dest, parent[len(path) :])
             if not os.path.exists(dest_dir):
                 if logger:
@@ -328,7 +323,7 @@ def _should_copy(src, dest, logger=None):
         # we add a fudge factor to work around a bug in python 2.x
         # that was fixed in python 3.x: https://bugs.python.org/issue12904
         if logger:
-            logger.warning("Out of date: %s" % dest)
+            logger.warn("Out of date: %s" % dest)
         return True
     if logger:
         logger.info("Up to date: %s" % dest)
@@ -438,9 +433,11 @@ def _get_labextension_metadata(module):
         )
 
     # Make sure the package is installed
+    import pkg_resources
+
     try:
-        version(package)
-    except PackageNotFoundError:
+        pkg_resources.get_distribution(package)
+    except pkg_resources.DistributionNotFound:
         subprocess.check_call([sys.executable, "-m", "pip", "install", "-e", mod_path])
         sys.path.insert(0, mod_path)
 

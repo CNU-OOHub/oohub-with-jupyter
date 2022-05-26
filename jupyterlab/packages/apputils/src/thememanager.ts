@@ -13,7 +13,8 @@ import { DisposableDelegate, IDisposable } from '@lumino/disposable';
 import { ISignal, Signal } from '@lumino/signaling';
 import { Widget } from '@lumino/widgets';
 import { Dialog, showDialog } from './dialog';
-import { ISplashScreen, IThemeManager } from './tokens';
+import { ISplashScreen } from './splash';
+import { IThemeManager } from './tokens';
 
 /**
  * The number of milliseconds between theme loading attempts.
@@ -80,7 +81,7 @@ export class ThemeManager implements IThemeManager {
    *
    * @param key - A Jupyterlab CSS variable, without the leading '--jp-'.
    *
-   * @returns value - The current value of the Jupyterlab CSS variable
+   * @return value - The current value of the Jupyterlab CSS variable
    */
   getCSS(key: string): string {
     return (

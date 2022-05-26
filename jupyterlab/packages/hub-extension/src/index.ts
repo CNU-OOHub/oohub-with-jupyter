@@ -11,8 +11,7 @@ import {
   ConnectionLost,
   IConnectionLost,
   JupyterFrontEnd,
-  JupyterFrontEndPlugin,
-  JupyterLab
+  JupyterFrontEndPlugin
 } from '@jupyterlab/application';
 import { Dialog, ICommandPalette, showDialog } from '@jupyterlab/apputils';
 import { URLExt } from '@jupyterlab/coreutils';
@@ -126,12 +125,10 @@ const hubExtensionMenu: JupyterFrontEndPlugin<void> = {
 const connectionlost: JupyterFrontEndPlugin<IConnectionLost> = {
   id: '@jupyterlab/apputils-extension:connectionlost',
   requires: [JupyterFrontEnd.IPaths, ITranslator],
-  optional: [JupyterLab.IInfo],
   activate: (
     app: JupyterFrontEnd,
     paths: JupyterFrontEnd.IPaths,
-    translator: ITranslator,
-    info: JupyterLab.IInfo | null
+    translator: ITranslator
   ): IConnectionLost => {
     const trans = translator.load('jupyterlab');
     const hubPrefix = paths.urls.hubPrefix || '';
@@ -152,12 +149,7 @@ const connectionlost: JupyterFrontEndPlugin<IConnectionLost> = {
       if (showingError) {
         return;
       }
-
       showingError = true;
-      if (info) {
-        info.isConnected = false;
-      }
-
       const result = await showDialog({
         title: trans.__('Server unavailable or unreachable'),
         body: trans.__(
@@ -169,12 +161,7 @@ const connectionlost: JupyterFrontEndPlugin<IConnectionLost> = {
           Dialog.cancelButton({ label: trans.__('Dismiss') })
         ]
       });
-
-      if (info) {
-        info.isConnected = true;
-      }
       showingError = false;
-
       if (result.button.accept) {
         await app.commands.execute(CommandIDs.restart);
       }

@@ -3,6 +3,7 @@
 
 import { PageConfig } from '@jupyterlab/coreutils';
 import {
+  expectFailure,
   flakyIt as it,
   JupyterServer,
   testEmission
@@ -120,6 +121,25 @@ describe('Kernel.IKernel', () => {
       ).done;
       expect(called).toBe(true);
     });
+
+    it('should be a signal following input request without parent header', async () => {
+      let called = false;
+      defaultKernel.pendingInput.connect((sender, args) => {
+        if (!called) {
+          called = true;
+          defaultKernel.sendInputReply({ status: 'ok', value: 'foo' });
+        }
+      });
+      const code = `input("Input something")`;
+      await defaultKernel.requestExecute(
+        {
+          code: code,
+          allow_stdin: true
+        },
+        true
+      ).done;
+      expect(called).toBe(true);
+    });
   });
 
   describe('#iopubMessage', () => {
@@ -150,7 +170,7 @@ describe('Kernel.IKernel', () => {
       });
       tester.send(msg);
       await emission;
-      await expect(tester.shutdown()).resolves.not.toThrow();
+      await tester.shutdown();
       tester.dispose();
     });
   });
@@ -178,9 +198,9 @@ describe('Kernel.IKernel', () => {
         msgId,
         content: {}
       });
-      msg.parent_header = { session: kernel.clientId } as any;
+      msg.parent_header = { session: kernel.clientId };
       tester.send(msg);
-      await expect(emission).resolves.not.toThrow();
+      await emission;
     });
 
     it('should not be emitted for an iopub signal', async () => {
@@ -206,7 +226,7 @@ describe('Kernel.IKernel', () => {
         msgId,
         content: {}
       });
-      msg.parent_header = { session: kernel.clientId } as any;
+      msg.parent_header = { session: kernel.clientId };
       tester.send(msg);
 
       await emission;
@@ -236,7 +256,7 @@ describe('Kernel.IKernel', () => {
         msgId: 'message from wrong session',
         content: {}
       });
-      msg1.parent_header = { session: 'wrong session' } as any;
+      msg1.parent_header = { session: 'wrong session' };
       tester.send(msg1);
 
       // Send a shell message with the right client (parent) session.
@@ -247,7 +267,7 @@ describe('Kernel.IKernel', () => {
         msgId: msgId,
         content: {}
       });
-      msg2.parent_header = { session: kernel.clientId } as any;
+      msg2.parent_header = { session: kernel.clientId };
       tester.send(msg2);
 
       await emission;
@@ -283,7 +303,7 @@ describe('Kernel.IKernel', () => {
         msgId,
         content: {}
       });
-      msg.parent_header = { session: kernel.clientId } as any;
+      msg.parent_header = { session: kernel.clientId };
       tester.send(msg);
       await emission;
     });
@@ -373,7 +393,7 @@ describe('Kernel.IKernel', () => {
         find: () => defaultKernel.status === 'idle'
       });
       await defaultKernel.requestExecute({ code: 'a=1' }).done;
-      await expect(emission).resolves.not.toThrow();
+      await emission;
     });
 
     it('should get a restarting status', async () => {
@@ -384,7 +404,7 @@ describe('Kernel.IKernel', () => {
       });
       await kernel.requestKernelInfo();
       await kernel.restart();
-      await expect(emission).resolves.not.toThrow();
+      await emission;
       await kernel.requestKernelInfo();
       await kernel.shutdown();
     });
@@ -394,7 +414,7 @@ describe('Kernel.IKernel', () => {
         find: () => defaultKernel.status === 'busy'
       });
       await defaultKernel.requestExecute({ code: 'a=1' }, true).done;
-      await expect(emission).resolves.not.toThrow();
+      await emission;
     });
 
     it('should get an unknown status while disconnected', async () => {
@@ -405,7 +425,7 @@ describe('Kernel.IKernel', () => {
       });
 
       await tester.close();
-      await expect(emission).resolves.not.toThrow();
+      await emission;
       tester.dispose();
     });
 
@@ -417,7 +437,7 @@ describe('Kernel.IKernel', () => {
         find: () => kernel.status === 'dead'
       });
       tester.sendStatus(UUID.uuid4(), 'dead');
-      await expect(dead).resolves.not.toThrow();
+      await dead;
       tester.dispose();
     });
   });
@@ -612,14 +632,14 @@ describe('Kernel.IKernel', () => {
           );
         };
       });
-      await expect(future.done).resolves.not.toThrow();
+      await future.done;
     });
   });
 
   describe('#interrupt()', () => {
     it('should interrupt and resolve with a valid server response', async () => {
       const kernel = await kernelManager.startNew();
-      await expect(kernel.interrupt()).resolves.not.toThrow();
+      await kernel.interrupt();
       await kernel.shutdown();
     });
 
@@ -629,13 +649,13 @@ describe('Kernel.IKernel', () => {
         name: defaultKernel.name
       });
       const interrupt = defaultKernel.interrupt();
-      await expect(interrupt).rejects.toThrow(/Invalid response: 200 OK/);
+      await expectFailure(interrupt, 'Invalid response: 200 OK');
     });
 
     it('should throw an error for an error response', async () => {
       handleRequest(defaultKernel, 500, {});
       const interrupt = defaultKernel.interrupt();
-      await expect(interrupt).rejects.toThrow();
+      await expectFailure(interrupt, '');
     });
 
     it('should fail if the kernel is dead', async () => {
@@ -648,7 +668,7 @@ describe('Kernel.IKernel', () => {
       });
       tester.sendStatus(UUID.uuid4(), 'dead');
       await dead;
-      await expect(kernel.interrupt()).rejects.toThrow(/Kernel is dead/);
+      await expectFailure(kernel.interrupt(), 'Kernel is dead');
       tester.dispose();
     });
   });
@@ -663,34 +683,35 @@ describe('Kernel.IKernel', () => {
       await kernel.info;
       await kernel.requestKernelInfo();
       await kernel.restart();
-      await expect(kernel.requestKernelInfo()).resolves.not.toThrow();
+      await kernel.requestKernelInfo();
       await kernel.shutdown();
     });
 
     it('should fail if the kernel does not restart', async () => {
       handleRequest(defaultKernel, 500, {});
       const restart = defaultKernel.restart();
-      await expect(restart).rejects.toThrow();
+      await expectFailure(restart, '');
     });
 
     it('should throw an error for an invalid response', async () => {
       const { id, name } = defaultKernel;
       handleRequest(defaultKernel, 205, { id, name });
-      await expect(defaultKernel.restart()).rejects.toThrow(
-        /Invalid response: 205 Reset Content/
+      await expectFailure(
+        defaultKernel.restart(),
+        'Invalid response: 205 Reset Content'
       );
     });
 
     it('should throw an error for an error response', async () => {
       handleRequest(defaultKernel, 500, {});
       const restart = defaultKernel.restart();
-      await expect(restart).rejects.toThrow();
+      await expectFailure(restart);
     });
 
     it('should throw an error for an invalid id', async () => {
       handleRequest(defaultKernel, 200, {});
       const restart = defaultKernel.restart();
-      await expect(restart).rejects.toThrow();
+      await expectFailure(restart);
     });
 
     it('should dispose of existing comm and future objects', async () => {
@@ -724,20 +745,26 @@ describe('Kernel.IKernel', () => {
         }
       });
       await defaultKernel.reconnect();
-      await expect(emission).resolves.not.toThrow();
+      await emission;
     });
 
     it('return promise should reject if the kernel is disposed or disconnected', async () => {
       const connection = defaultKernel.reconnect();
       defaultKernel.dispose();
-      await expect(connection).rejects.toThrow();
+      try {
+        await connection;
+        // If the connection did not reject, so test fails.
+        throw new Error('Reconnection promise did not reject');
+      } catch (e) {
+        /* Connection promise reject - test passes */
+      }
     });
   });
 
   describe('#shutdown()', () => {
     it('should shut down and resolve with a valid server response', async () => {
       const kernel = await kernelManager.startNew();
-      await expect(kernel.shutdown()).resolves.not.toThrow();
+      await kernel.shutdown();
     });
 
     it('should throw an error for an invalid response', async () => {
@@ -746,19 +773,19 @@ describe('Kernel.IKernel', () => {
         name: 'foo'
       });
       const shutdown = defaultKernel.shutdown();
-      await expect(shutdown).rejects.toThrow(/Invalid response: 200 OK/);
+      await expectFailure(shutdown, 'Invalid response: 200 OK');
     });
 
     it('should handle a 404 error', async () => {
       const kernel = await kernelManager.startNew();
       handleRequest(kernel, 404, {});
-      await expect(kernel.shutdown()).resolves.not.toThrow();
+      await kernel.shutdown();
     });
 
     it('should throw an error for an error response', async () => {
       handleRequest(defaultKernel, 500, {});
       const shutdown = defaultKernel.shutdown();
-      await expect(shutdown).rejects.toThrow();
+      await expectFailure(shutdown, '');
     });
 
     it('should still pass if the kernel is dead', async () => {
@@ -771,7 +798,7 @@ describe('Kernel.IKernel', () => {
       });
       tester.sendStatus(UUID.uuid4(), 'dead');
       await dead;
-      await expect(kernel.shutdown()).resolves.not.toThrow();
+      await kernel.shutdown();
       tester.dispose();
     });
   });
@@ -793,9 +820,7 @@ describe('Kernel.IKernel', () => {
         code: 'hello',
         cursor_pos: 4
       };
-      await expect(
-        defaultKernel.requestComplete(options)
-      ).resolves.not.toThrow();
+      await defaultKernel.requestComplete(options);
     });
 
     it('should reject the promise if the kernel is dead', async () => {
@@ -812,9 +837,7 @@ describe('Kernel.IKernel', () => {
       });
       tester.sendStatus(UUID.uuid4(), 'dead');
       await dead;
-      await expect(kernel.requestComplete(options)).rejects.toThrow(
-        /Kernel is dead/
-      );
+      await expectFailure(kernel.requestComplete(options), 'Kernel is dead');
       tester.dispose();
     });
   });
@@ -826,9 +849,7 @@ describe('Kernel.IKernel', () => {
         cursor_pos: 4,
         detail_level: 0
       };
-      await expect(
-        defaultKernel.requestInspect(options)
-      ).resolves.not.toThrow();
+      await defaultKernel.requestInspect(options);
     });
   });
 
@@ -837,9 +858,7 @@ describe('Kernel.IKernel', () => {
       const options: KernelMessage.IIsCompleteRequestMsg['content'] = {
         code: 'hello'
       };
-      await expect(
-        defaultKernel.requestIsComplete(options)
-      ).resolves.not.toThrow();
+      await defaultKernel.requestIsComplete(options);
     });
   });
 
@@ -853,9 +872,7 @@ describe('Kernel.IKernel', () => {
         start: 1,
         stop: 2
       };
-      await expect(
-        defaultKernel.requestHistory(options)
-      ).resolves.not.toThrow();
+      await defaultKernel.requestHistory(options);
     });
 
     it('tail messages should resolve the promise', async () => {
@@ -865,9 +882,7 @@ describe('Kernel.IKernel', () => {
         hist_access_type: 'tail',
         n: 1
       };
-      await expect(
-        defaultKernel.requestHistory(options)
-      ).resolves.not.toThrow();
+      await defaultKernel.requestHistory(options);
     });
 
     it('search messages should resolve the promise', async () => {
@@ -879,9 +894,7 @@ describe('Kernel.IKernel', () => {
         pattern: '*',
         unique: true
       };
-      await expect(
-        defaultKernel.requestHistory(options)
-      ).resolves.not.toThrow();
+      await defaultKernel.requestHistory(options);
     });
   });
 
@@ -970,8 +983,7 @@ describe('Kernel.IKernel', () => {
               status: 'ok',
               user_expressions: {}
             },
-            parentHeader:
-              msg.header as KernelMessage.IExecuteRequestMsg['header']
+            parentHeader: msg.header as KernelMessage.IExecuteRequestMsg['header']
           })
         );
 

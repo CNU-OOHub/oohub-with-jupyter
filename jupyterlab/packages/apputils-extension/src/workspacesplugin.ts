@@ -15,7 +15,11 @@ import {
   IDocumentWidget
 } from '@jupyterlab/docregistry';
 import { FileBrowser, IFileBrowserFactory } from '@jupyterlab/filebrowser';
-import { Contents, Workspace, WorkspaceManager } from '@jupyterlab/services';
+import {
+  ContentsManager,
+  Workspace,
+  WorkspaceManager
+} from '@jupyterlab/services';
 import { IStateDB } from '@jupyterlab/statedb';
 import { ITranslator, nullTranslator } from '@jupyterlab/translation';
 import { Widget } from '@lumino/widgets';
@@ -116,7 +120,7 @@ namespace Private {
    */
   export async function save(
     userPath: string,
-    contents: Contents.IManager,
+    contents: ContentsManager,
     data: Promise<Workspace.IWorkspace>,
     state: IStateDB
   ): Promise<void> {
@@ -147,7 +151,7 @@ namespace Private {
    */
   export async function saveAs(
     browser: FileBrowser,
-    contents: Contents.IManager,
+    contents: ContentsManager,
     data: Promise<Workspace.IWorkspace>,
     state: IStateDB,
     translator?: ITranslator
@@ -182,8 +186,7 @@ namespace Private {
     constructor(options: WorkspaceFactory.IOptions) {
       const trans = (options.translator || nullTranslator).load('jupyterlab');
       super({
-        name: 'Workspace loader',
-        label: trans.__('Workspace loader'),
+        name: trans.__('Workspace loader'),
         fileTypes: [WORKSPACE_NAME],
         defaultFor: [WORKSPACE_NAME],
         readOnly: true
@@ -204,7 +207,7 @@ namespace Private {
       // Save a file's contents as a workspace and navigate to that workspace.
       void context.ready.then(async () => {
         const file = context.model;
-        const workspace = file.toJSON() as unknown as Workspace.IWorkspace;
+        const workspace = (file.toJSON() as unknown) as Workspace.IWorkspace;
         const path = context.path;
         const id = workspace.metadata.id;
 

@@ -848,7 +848,8 @@ export class SessionContext implements ISessionContext {
    * Change the kernel.
    */
   private async _changeKernel(
-    model: Partial<Kernel.IModel> = {}
+    model: Partial<Kernel.IModel> = {},
+    isInit = false
   ): Promise<Kernel.IKernelConnection | null> {
     if (model.name) {
       this._pendingKernelName = model.name;
@@ -1353,8 +1354,7 @@ export const sessionContextDialogs: ISessionContext.IDialogs = {
     const result = await showDialog({
       title: trans.__('Restart Kernel?'),
       body: trans.__(
-        'Do you want to restart the kernel of %1? All variables will be lost.',
-        sessionContext.name
+        'Do you want to restart the current kernel? All variables will be lost.'
       ),
       buttons: [Dialog.cancelButton(), restartBtn]
     });
@@ -1431,8 +1431,13 @@ namespace Private {
     options: SessionContext.IKernelSearch
   ): string | null {
     const { specs, preference } = options;
-    const { name, language, shouldStart, canStart, autoStartDefault } =
-      preference;
+    const {
+      name,
+      language,
+      shouldStart,
+      canStart,
+      autoStartDefault
+    } = preference;
 
     if (!specs || shouldStart === false || canStart === false) {
       return null;
@@ -1554,7 +1559,7 @@ namespace Private {
     }
 
     // Add an option for no kernel
-    node.appendChild(optionForNone(translator));
+    node.appendChild(optionForNone());
 
     const other = document.createElement('optgroup');
     other.label = trans.__('Start Other Kernel');

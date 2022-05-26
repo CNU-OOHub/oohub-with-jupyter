@@ -1,19 +1,8 @@
 {
-  "title": "Extension Manager",
-  "description": "Extension manager settings.",
   "jupyter.lab.setting-icon": "ui-components:settings",
   "jupyter.lab.setting-icon-label": "Extension Manager",
   "jupyter.lab.menus": {
     "main": [
-      {
-        "id": "jp-mainmenu-view",
-        "items": [
-          {
-            "command": "extensionmanager:show-panel",
-            "rank": 9
-          }
-        ]
-      },
       {
         "id": "jp-mainmenu-settings",
         "items": [
@@ -33,13 +22,8 @@
       }
     ]
   },
-  "jupyter.lab.shortcuts": [
-    {
-      "command": "extensionmanager:show-panel",
-      "keys": ["Accel Shift X"],
-      "selector": "body"
-    }
-  ],
+  "title": "Extension Manager",
+  "description": "Extension manager settings.",
   "properties": {
     "enabled": {
       "title": "Enabled Status",

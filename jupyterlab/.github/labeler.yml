@@ -5,8 +5,6 @@ Design System CSS:
 documentation:
   - docs/**/*
   - docs/*
-  - '*.md'
-  - '**/*.md'
 
 tag:CSS:
   - '**/*.css'
@@ -307,12 +305,6 @@ pkg:ui-components:
   - packages/ui-components/*
   - packages/ui-components-extension/**/*
   - packages/ui-components-extension/*
-
-pkg:user:
-  - packages/user/**/*
-  - packages/user/*
-  - packages/user-extension/**/*
-  - packages/user-extension/*
 
 pkg:vdom:
   - packages/vdom/**/*

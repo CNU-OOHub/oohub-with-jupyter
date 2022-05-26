@@ -5,7 +5,7 @@ import { KernelSpecManager } from '@jupyterlab/services';
 
 import { log } from './log';
 
-export async function main(): Promise<void> {
+export async function main() {
   log('Get the list of kernel specs');
   const kernelSpecManager = new KernelSpecManager();
   await kernelSpecManager.ready;

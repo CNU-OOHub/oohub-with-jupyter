@@ -172,7 +172,6 @@ export type ShellMessageType =
   | 'is_complete_request'
   | 'kernel_info_reply'
   | 'kernel_info_request'
-  | 'shutdown_reply'
   | 'shutdown_request';
 
 /**
@@ -300,7 +299,7 @@ export interface IMessage<MSGTYPE extends MessageType = MessageType> {
   /**
    * The parent message
    */
-  parent_header: IHeader | Record<string, never>;
+  parent_header: IHeader | {};
 }
 
 /**
@@ -741,7 +740,7 @@ type ReplyContent<T> = T | IReplyErrorContent | IReplyAbortContent;
  * See [Messaging in Jupyter](https://jupyter-client.readthedocs.io/en/latest/messaging.html#kernel-info).
  */
 export interface IInfoRequestMsg extends IShellMessage<'kernel_info_request'> {
-  content: Record<string, never>;
+  content: {};
 }
 
 /**
@@ -1255,15 +1254,4 @@ export interface IInputReplyMsg extends IStdinMessage<'input_reply'> {
  */
 export function isInputReplyMsg(msg: IMessage): msg is IInputReplyMsg {
   return msg.header.msg_type === 'input_reply';
-}
-
-// ///////////////////////////////////////////////
-// Message (de)serialization
-// ///////////////////////////////////////////////
-
-/**
- * The list of supported kernel wire protocols over websocket.
- */
-export enum supportedKernelWebSocketProtocols {
-  v1KernelWebsocketJupyterOrg = 'v1.kernel.websocket.jupyter.org'
 }

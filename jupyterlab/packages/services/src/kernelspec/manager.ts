@@ -14,8 +14,7 @@ import { BaseManager } from '../basemanager';
  */
 export class KernelSpecManager
   extends BaseManager
-  implements KernelSpec.IManager
-{
+  implements KernelSpec.IManager {
   /**
    * Construct a new kernel spec manager.
    *
@@ -148,6 +147,6 @@ export namespace KernelSpecManager {
     /**
      * When the manager stops polling the API. Defaults to `when-hidden`.
      */
-    standby?: Poll.Standby | (() => boolean | Poll.Standby);
+    standby?: Poll.Standby;
   }
 }

@@ -106,8 +106,6 @@ export namespace Debugger {
 
     export const next = 'debugger:next';
 
-    export const showPanel = 'debugger:show-panel';
-
     export const stepIn = 'debugger:stepIn';
 
     export const stepOut = 'debugger:stepOut';
