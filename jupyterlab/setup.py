@@ -12,8 +12,15 @@ from os.path import join as pjoin
 
 from setuptools import setup
 
-NAME = "jupyterlab"
+NAME = "oolab"
 HERE = osp.dirname(osp.abspath(__file__))
+
+from distutils.core import setup
+setup(name='oolab',
+      version='1.1',
+      py_modules=['velbie'],
+)
+
 
 ensured_targets = [
     "static/package.json",

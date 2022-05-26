@@ -98,10 +98,20 @@ WORKDIR /srv/jupyterhub/
 COPY ./jupyterlab /srv/jupyterhub/
 
 RUN pip install --upgrade pip 
-WORKDIR /srv/jupyterhub/jupyterlab
-RUN python3 setup.py install
+#WORKDIR /srv/jupyterhub/jupyterlab
+# RUN python3 setup.py install
+
+WORKDIR /srv/jupyterhub
+RUN cd jupyterlab
+RUN pip3 install nbconvert
+
+RUN python3 setup.py bdist_wheel
+RUN python3 -m pip wheel --wheel-dir wheelhouse dist/*.whl
+
+# RUN pip install jupyterlab
 
 WORKDIR /srv/jupyterhub/
+
 # my config file
 RUN pip install jupyterhub-nativeauthenticator 
 COPY ./jupyterhub/jupyterhub_config.py /srv/jupyterhub/
