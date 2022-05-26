@@ -8,7 +8,9 @@ RUN micromamba install -qy -c conda-forge python nodejs yarn \
 # Install npm packages - faster build thanks to caching
 ## package_json.tar.gz contains all package.json files using
 ## `tar cvf package_json.tar.gz package.json packages/*/package.package_json`
-ADD ./jupyterlab/package.json /tmp/jupyterlab-dev/package.json 
+## our code is `tar cvf package_json.tar.gz package.json packages/*/package.json`
+#RUN tar cvf ./jupyterlab/package_json.tar.gz ./jupyterlab/package.json  ./jupyterlab/packages/*/package.json
+ADD ./jupyterlab/package.json /tmp/jupyterlab-dev/package.json
 COPY ./jupyterlab/yarn.lock /tmp/jupyterlab-dev
 
 RUN cd /tmp/jupyterlab-dev \
@@ -17,10 +19,10 @@ RUN cd /tmp/jupyterlab-dev \
 # Install python dependencies - faster build thanks to caching
 COPY ./jupyterlab/setup.cfg /tmp
 
-RUN list_package=$(python -c "from configparser import ConfigParser; c = ConfigParser(); c.read('/tmp/setup.cfg'); print(' '.join(c['options']['install_requires'].strip().splitlines()))") \
-    && micromamba install -qy -c conda-forge $list_package \
-    && micromamba clean -ay \
-    && rm /tmp/setup.cfg
+RUN list_package=$(python -c "from configparser import ConfigParser; c = ConfigParser(); c.read('/tmp/setup.cfg'); print(' '.join(c['options']['install_requires'].strip().splitlines()))") 
+RUN micromamba install -qy -c conda-forge $list_package 
+RUN micromamba clean -ay 
+RUN rm /tmp/setup.cfg
 
 # Install JupyterLab
 COPY --chown=jovyan ./jupyterlab/builder/ /tmp/jupyterlab-dev/builder/

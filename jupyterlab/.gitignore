@@ -41,8 +41,6 @@ packages/services/examples/node/config.json
 packages/services/examples/browser/tmp
 packages/theme-*/static
 
-## test
-
 tests/**/coverage
 tests/**/.cache-loader
 
@@ -128,5 +126,3 @@ junit.xml
 !.vscode/extension.json
 
 .jupyter_releaser_checkout
-
-#Test

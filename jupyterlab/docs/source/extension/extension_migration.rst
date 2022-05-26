@@ -45,7 +45,7 @@ bumped their major version (following semver convention). We want to point out p
    in particular those with the strict null checks enabled.
 - ``@jupyterlab/docprovider`` from 3.x to 4.x
    ``WebSocketProviderWithLocks`` has been renamed to ``WebSocketProvider``.
-   ``acquireLock`` and ``releaseLock`` have been removed from ``IDocumentProvider``.
+   ``acquireLock``, ``releaseLock``, ``requestInitialContent`` and ``putInitializedState`` have been removed from ``IDocumentProvider``.
    ``renameAck`` is not optional anymore in ``IDocumentProvider``.
 - ``@jupyterlab/documentsearch`` from 3.x to 4.x
    ``@jupyterlab/documentsearch:plugin`` renamed ``@jupyterlab/documentsearch-extension:plugin``
@@ -54,7 +54,10 @@ bumped their major version (following semver convention). We want to point out p
    you will need to register a ``ISearchProviderFactory`` to the ``ISearchProviderRegistry``. The
    factory will build a ``ISearchProvider`` for the document widget.
 - ``@jupyterlab/fileeditor`` from 3.x to 4.x
-   Removed the class ``FileEditorCodeWrapper``, instead, you can use ``CodeEditorWrapper`` from ``@jupyterlab/codeeditor``.
+   Remove the class ``FileEditorCodeWrapper``, instead, you can use ``CodeEditorWrapper`` from ``@jupyterlab/codeeditor``.
+- ``@jupyterlab/filebrowser-extension`` from 3.x to 4.x
+   Remove command ``filebrowser:create-main-launcher``. You can replace by ``launcher:create`` (same behavior)
+   All launcher creation actions are moved to ``@jupyterlab/launcher-extension``.
 - ``@jupyterlab/notebook`` from 3.x to 4.x
    * The ``NotebookPanel._onSave`` method is now ``private``.
    * ``NotebookActions.collapseAll`` method renamed to ``NotebookActions.collapseAllHeadings``.
