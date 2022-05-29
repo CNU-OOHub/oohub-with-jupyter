@@ -99,7 +99,8 @@ COPY ./jupyterlab /srv/jupyterhub/
 
 RUN pip install --upgrade pip 
 WORKDIR /srv/jupyterhub/jupyterlab
-RUN python3 setup.py install
+# RUN python3 setup.py install
+RUN pip install jupyterlab
 
 WORKDIR /srv/jupyterhub/
 # my config file
