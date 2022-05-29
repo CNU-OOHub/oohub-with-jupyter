@@ -1,7 +1,8 @@
 #!/bin/bash
 
-chmod 755 oohub_start
-echo "Hello OOHub!"
+docker-compose down
+
+echo "Bye OOHub!"
 echo -e "==================================================\n
 ====  ===  ===  ===  ===  ===  ===  ===  ===  ====\n
                                                   \n
@@ -16,10 +17,5 @@ echo -e "==================================================\n
                                                   \n
 ====  ===  ===  ===  ===  ===  ===  ===  ===  ====\n
 ==================================================\n"
-
-
-docker-compose down -v
-rm -rf ./jupyterhub/jupyterhub_cookie_secret
-docker-compose up --build
 
 exit 0
